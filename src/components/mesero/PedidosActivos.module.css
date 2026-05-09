@@ -1,0 +1,45 @@
+/* PedidosActivos.module.css */
+
+.empty { font-size: 13px; color: var(--text-muted); font-style: italic; padding: 8px 0; }
+
+.list { display: flex; flex-direction: column; gap: 8px; }
+
+.item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  gap: 8px;
+  animation: slideIn 0.25s ease both;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.itemLeft  { display: flex; flex-direction: column; gap: 3px; }
+.itemRight { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+.pedidoId  { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-cream); }
+.mesaInfo  { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
+.total     { font-size: 13px; color: var(--ember); font-weight: 500; }
+
+/* Badges de estado */
+.badge {
+  font-size: 10px; letter-spacing: 0.8px;
+  text-transform: uppercase; font-weight: 500;
+  padding: 3px 8px; border-radius: 20px;
+  border: 1px solid;
+}
+
+.pendiente  { color: #F2A74B; border-color: rgba(242,167,75,0.3);  background: rgba(242,167,75,0.08); }
+.proceso    { color: #5BA4F5; border-color: rgba(91,164,245,0.3);  background: rgba(91,164,245,0.08); }
+.listo      { color: #4CAF50; border-color: rgba(76,175,80,0.35);  background: rgba(76,175,80,0.1);   animation: pulse 1.5s ease-in-out infinite; }
+.entregado  { color: var(--text-muted); border-color: var(--border-subtle); background: transparent; }
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(76,175,80,0.3); }
+  50%     { box-shadow: 0 0 0 4px rgba(76,175,80,0); }
+}

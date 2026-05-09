@@ -1,0 +1,44 @@
+/* ContadorEstados.module.css */
+
+.bar {
+  display: flex; gap: 12px;
+}
+
+.item {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  min-width: 90px;
+  transition: all var(--t-base);
+}
+
+.value {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 900;
+  line-height: 1;
+}
+
+.label {
+  font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.pendiente {
+  border-color: rgba(242,167,75,0.3);
+  background: rgba(242,167,75,0.06);
+  color: var(--ember);
+}
+
+.proceso {
+  border-color: rgba(91,164,245,0.3);
+  background: rgba(91,164,245,0.06);
+  color: #5BA4F5;
+}
+
+.listo {
+  border-color: rgba(76,175,80,0.35);
+  background: rgba(76,175,80,0.08);
+  color: var(--success);
+}

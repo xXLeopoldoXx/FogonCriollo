@@ -1,0 +1,49 @@
+/* InputField.module.css */
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+
+.label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.wrap { position: relative; }
+
+.input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 13px 14px 13px 42px;
+  font-size: 14px;
+  color: var(--text-cream);
+  outline: none;
+  transition: border-color var(--t-base), background var(--t-base), box-shadow var(--t-base);
+}
+
+.input::placeholder { color: rgba(201,185,154,0.35); }
+
+.input:focus {
+  border-color: var(--brand);
+  background: rgba(200,90,26,0.06);
+  box-shadow: var(--shadow-focus);
+}
+
+.input.hasError {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px rgba(224,82,82,0.15);
+}
+
+.icon {
+  position: absolute;
+  left: 14px; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  color: var(--text-dim);
+  pointer-events: none;
+  transition: color var(--t-base);
+}
+
+.wrap:focus-within .icon { color: var(--brand-glow); }

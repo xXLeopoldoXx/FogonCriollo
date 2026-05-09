@@ -1,0 +1,139 @@
+/* TarjetaPedido.module.css */
+
+.card {
+  background: linear-gradient(145deg, rgba(45,28,16,0.97) 0%, rgba(28,17,9,0.99) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  transition: transform var(--t-base), box-shadow var(--t-base);
+  animation: cardIn 0.3s cubic-bezier(0.16,1,0.3,1) both;
+  position: relative; overflow: hidden;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Borde izquierdo según estado */
+.card::before {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 4px;
+  border-radius: 12px 0 0 12px;
+}
+.pendiente::before  { background: var(--ember); }
+.proceso::before    { background: #5BA4F5; }
+.listo::before      { background: var(--success); }
+
+/* Urgencia */
+.urg_alta   { box-shadow: 0 0 0 1px rgba(224,82,82,0.3), 0 4px 20px rgba(224,82,82,0.1); }
+.urg_media  { box-shadow: 0 0 0 1px rgba(242,167,75,0.2); }
+.urg_normal { box-shadow: none; }
+
+/* Header */
+.header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 8px;
+}
+.headerLeft  { display: flex; flex-direction: column; gap: 3px; }
+.headerRight { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+.pedidoId {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 900;
+  color: var(--text-cream);
+}
+
+.mesaInfo  { font-size: 12px; color: var(--text-dim); letter-spacing: 0.5px; }
+
+/* Badges */
+.estadoBadge {
+  font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; font-weight: 500;
+  padding: 3px 8px; border-radius: 20px; border: 1px solid;
+}
+.pendiente { color: var(--ember);   border-color: rgba(242,167,75,0.4);  background: rgba(242,167,75,0.1); }
+.proceso   { color: #5BA4F5;        border-color: rgba(91,164,245,0.4);  background: rgba(91,164,245,0.1); }
+.listo     { color: var(--success); border-color: rgba(76,175,80,0.4);   background: rgba(76,175,80,0.1);
+             animation: glowListo 1.5s ease-in-out infinite; }
+
+@keyframes glowListo {
+  0%,100% { box-shadow: 0 0 0 0 rgba(76,175,80,0.4); }
+  50%     { box-shadow: 0 0 0 4px rgba(76,175,80,0); }
+}
+
+/* Timer */
+.timer {
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 700;
+}
+.timerUrg_normal { color: var(--text-dim); }
+.timerUrg_media  { color: var(--ember); }
+.timerUrg_alta   { color: var(--error); animation: blink 1s step-end infinite; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Mesero */
+.mesero { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+.meseroIcon { font-size: 14px; }
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+}
+
+/* Items */
+.items { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+
+.item { display: flex; align-items: baseline; gap: 8px; }
+
+.itemCant {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 700;
+  color: var(--ember); min-width: 28px;
+}
+
+.itemNombre { font-size: 14px; color: var(--text-cream); }
+
+/* Action button */
+.actionBtn {
+  width: 100%; border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all var(--t-base);
+  margin-top: 4px;
+}
+
+.btn_pendiente {
+  background: rgba(242,167,75,0.15);
+  border: 1px solid rgba(242,167,75,0.3);
+  color: var(--ember);
+}
+.btn_pendiente:hover {
+  background: rgba(242,167,75,0.25);
+  border-color: var(--ember);
+  transform: translateY(-1px);
+}
+
+.btn_proceso {
+  background: rgba(91,164,245,0.15);
+  border: 1px solid rgba(91,164,245,0.3);
+  color: #5BA4F5;
+}
+.btn_proceso:hover {
+  background: rgba(91,164,245,0.25);
+  border-color: #5BA4F5;
+  transform: translateY(-1px);
+}
+
+/* Alerta urgencia */
+.urgAlert {
+  font-size: 11px; color: var(--error);
+  background: rgba(224,82,82,0.08);
+  border: 1px solid rgba(224,82,82,0.2);
+  border-radius: 6px; padding: 6px 10px;
+  text-align: center;
+}
