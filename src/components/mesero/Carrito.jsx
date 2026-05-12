@@ -10,6 +10,11 @@ function getClienteURL(idPedido) {
   return `${window.location.origin}/cliente/${idPedido}`;
 }
 
+function money(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 /* ── Sub-componente: fila de ítem con nota ─────────────── */
 function ItemRow({ item, onQuitar, onEliminar, onNotaChange }) {
   const [mostrarNota, setMostrarNota] = useState(false);
@@ -20,7 +25,7 @@ function ItemRow({ item, onQuitar, onEliminar, onNotaChange }) {
         <div className={styles.itemInfo}>
           <span className={styles.itemNombre}>{item.nombre}</span>
           <span className={styles.itemPrecio}>
-            S/ {(item.precio * item.cantidad).toFixed(2)}
+            S/ {(money(item.precio) * item.cantidad).toFixed(2)}
           </span>
         </div>
         <div className={styles.itemActions}>

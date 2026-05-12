@@ -115,6 +115,14 @@
 /* ── Items ────────────────────────────────────────────── */
 .items  { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 .item   { display: flex; align-items: flex-start; gap: 8px; }
+.itemImg {
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  object-fit: cover;
+  background: rgba(255,255,255,0.06);
+  flex: 0 0 auto;
+}
 .itemCant {
   font-family: var(--font-display);
   font-size: 16px;

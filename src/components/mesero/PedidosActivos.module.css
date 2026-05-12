@@ -134,6 +134,12 @@
 }
 
 /* ── Botón compartir ──────────────────────────────────── */
+.actionsRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
 .shareBtn {
   width: 100%;
   background: rgba(74,144,226,0.06);
@@ -147,6 +153,28 @@
   transition: all var(--t-fast);
   text-align: center;
 }
+
+.deliverBtn {
+  background: rgba(76,175,80,0.16);
+  border: 1px solid rgba(76,175,80,0.38);
+  border-radius: var(--radius-sm);
+  color: #8ee6a6;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 7px 12px;
+  white-space: nowrap;
+  animation: deliverReady 1.4s ease-in-out infinite;
+}
+
+.deliverBtn:hover {
+  background: rgba(76,175,80,0.26);
+}
+
+@keyframes deliverReady {
+  0%, 100% { transform: translate3d(0,0,0); box-shadow: none; }
+  50% { transform: translate3d(0,-1px,0); box-shadow: 0 0 12px rgba(76,175,80,0.18); }
+}
+
 .shareBtn:hover {
   background: rgba(74,144,226,0.12);
   border-color: rgba(74,144,226,0.4);

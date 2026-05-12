@@ -154,24 +154,25 @@ function ClienteEspera({ pedidos, connected, loading, onBuscar, onOpen }) {
 
 function StageAnimation({ estado }) {
   const paso = PASO_IDX[estado] ?? 0;
+  const progress = `${Math.min(100, (paso / 3) * 100)}%`;
   return (
-    <div className={styles.stage} aria-hidden="true">
-      <div className={`${styles.station} ${paso >= 0 ? styles.stationActive : ''}`}>
-        <span className={styles.stationIcon}>R</span>
-        <span>Recibido</span>
+    <div className={styles.stage} style={{ '--progress': progress, '--runner-step': paso }} aria-hidden="true">
+      <div className={styles.stageTrack}>
+        <span className={styles.stageFill} />
+        <span className={styles.runner} />
       </div>
-      <div className={`${styles.station} ${paso >= 1 ? styles.stationActive : ''}`}>
-        <span className={styles.stationIcon}>C</span>
-        <span>Cocina</span>
+      {PASOS.map((item, index) => (
+        <div key={item.key} className={`${styles.station} ${paso >= index ? styles.stationActive : ''}`}>
+          <span className={styles.stationIcon}>{String(index + 1).padStart(2, '0')}</span>
+          <span>{item.label}</span>
+        </div>
+      ))}
+      <div className={styles.heatField}>
+        <span />
+        <span />
+        <span />
+        <span />
       </div>
-      <div className={`${styles.station} ${paso >= 2 ? styles.stationActive : ''}`}>
-        <span className={styles.stationIcon}>L</span>
-        <span>Listo</span>
-      </div>
-      <div
-        className={styles.runner}
-        style={{ '--runner-step': paso }}
-      />
     </div>
   );
 }
@@ -190,6 +191,14 @@ export function ClientePage() {
 
   const tiempoTexto = useTiempoTranscurrido(pedido?.fecha_hora);
   const pasoActual = PASO_IDX[pedido?.estado] ?? 0;
+  const etaTexto = useMemo(() => {
+    if (!pedido) return '';
+    if (pedido.estado === 'ENTREGADO') return 'Finalizado';
+    if (pedido.estado === 'LISTO') return '1-2 min';
+    if (pedido.estado === 'EN_PROCESO') return '6-10 min';
+    const cola = Number(pedido.posicion_cola ?? 1);
+    return `${Math.max(4, cola * 3)}-${Math.max(8, cola * 4)} min`;
+  }, [pedido]);
 
   const items = useMemo(() => {
     if (!pedido?.items) return [];
@@ -347,6 +356,10 @@ export function ClientePage() {
             <div>
               <span>Cola</span>
               <strong>{pedido.posicion_cola ? `#${pedido.posicion_cola}` : 'Atendido'}</strong>
+            </div>
+            <div>
+              <span>Estimado</span>
+              <strong>{etaTexto}</strong>
             </div>
           </div>
 

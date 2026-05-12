@@ -37,7 +37,29 @@ async function handleResponse(res) {
   throw new Error(msg);
 }
 
-/* ── GET /api/mesas ───────────────────────────────────── */
+function toMoney(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeProducto(producto) {
+  return {
+    ...producto,
+    id_producto: Number(producto.id_producto),
+    precio: toMoney(producto.precio),
+    disponible: producto.disponible !== false,
+  };
+}
+
+function normalizePedido(pedido) {
+  return {
+    ...pedido,
+    id_pedido: Number(pedido.id_pedido),
+    total: toMoney(pedido.total),
+  };
+}
+
+//GET /api/mesas
 export async function getMesas(token) {
   const res = await fetchWithTimeout(
     `${API_BASE}/mesas`,
@@ -46,16 +68,17 @@ export async function getMesas(token) {
   return handleResponse(res);
 }
 
-/* ── GET /api/productos?disponible=true ───────────────── */
+//GET /api/productos?disponible=true
 export async function getProductos(token) {
   const res = await fetchWithTimeout(
     `${API_BASE}/productos?disponible=true`,
     { headers: authHeaders(token) }
   );
-  return handleResponse(res);
+  const data = await handleResponse(res);
+  return data.map(normalizeProducto);
 }
 
-/* ── POST /api/pedidos ────────────────────────────────── */
+//POST /api/pedidos 
 export async function crearPedido({ token, id_mesa, id_mesero, items }) {
   // Validaciones de seguridad del lado cliente
   if (!id_mesa)         throw new Error('Mesa no especificada.');
@@ -83,27 +106,43 @@ export async function crearPedido({ token, id_mesa, id_mesero, items }) {
   return handleResponse(res);
 }
 
-/* ── GET /api/pedidos/mesero/:id_mesero ───────────────── */
+//GET /api/pedidos/mesero/:id_mesero  
 export async function getPedidosMesero(token, id_mesero) {
   if (!id_mesero) throw new Error('ID de mesero requerido.');
   const res = await fetchWithTimeout(
     `${API_BASE}/pedidos/mesero/${id_mesero}`,
     { headers: authHeaders(token) }
   );
+  const data = await handleResponse(res);
+  return data.map(normalizePedido);
+}
+
+//PATCH /api/pedidos/:id_pedido/estado
+export async function cambiarEstadoPedido(token, id_pedido, estado) {
+  if (!id_pedido) throw new Error('ID de pedido requerido.');
+  const res = await fetchWithTimeout(
+    `${API_BASE}/pedidos/${id_pedido}/estado`,
+    {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify({ estado }),
+    }
+  );
   return handleResponse(res);
 }
 
-/* ── GET /api/pedidos/:id/cliente  (público, sin auth) ── */
+//GET /api/pedidos/:id/cliente  (público, sin auth)
 export async function getClientePedido(idPedido) {
   if (!idPedido) throw new Error('ID de pedido requerido.');
   const res = await fetchWithTimeout(
     `${API_BASE}/pedidos/${idPedido}/cliente`
     // Sin Authorization header — ruta pública
   );
-  return handleResponse(res);
+  const data = await handleResponse(res);
+  return normalizePedido(data);
 }
 
-/* ── GET /api/pedidos/cliente/espera  (público) ───────── */
+//GET /api/pedidos/cliente/espera  (público)
 export async function getClienteEspera() {
   const res = await fetchWithTimeout(
     `${API_BASE}/pedidos/cliente/espera`,

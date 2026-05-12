@@ -48,7 +48,25 @@ src/
 | Retroalimentación | Error animado (shake), botón verde al éxito |
 | Minimización de memoria | Roles visibles con ícono, no hay que recordar rutas |
 
+## Ejecucion bd
+
+Abre pgAdmin → Query Tool en la BD fogon_criollo y ejecuta los 3 archivos en orden:
+
+Paso 1 → pega y ejecuta 01_schema.sql (ENUMs + tablas)
+
+Paso 2 → pega y ejecuta 02_extras.sql (índices + funciones + vistas + trigger)
+
+Paso 3 → pega y ejecuta 03_seed.sql (datos de prueba)
+
 ## Instalación
+
+cd backend
+cp .env.example .env
+# Edita .env → pon tu contraseña de PostgreSQL en DB_PASSWORD
+npm install
+npm run dev
+
+```new terminal```
 
 ```bash
 npm install

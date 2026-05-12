@@ -21,6 +21,33 @@ function Toast({ toast }) {
     <div className={`${styles.toast} ${cls}`} role="status" aria-live="polite">
       {toast.message}
     </div>
+);
+}
+
+function OrderFlow({ mesaActiva, carrito, enviando, ultimoPedidoId }) {
+  const steps = [
+    { key: 'mesa', label: 'Mesa', active: !!mesaActiva, done: !!mesaActiva },
+    { key: 'carta', label: 'Carta', active: !!mesaActiva && carrito.length > 0, done: carrito.length > 0 },
+    { key: 'cocina', label: 'Cocina', active: enviando, done: !!ultimoPedidoId },
+    { key: 'cliente', label: 'Cliente', active: !!ultimoPedidoId, done: !!ultimoPedidoId },
+  ];
+
+  return (
+    <div className={styles.orderFlow} aria-label="Etapas de toma de pedido">
+      {steps.map((step, index) => (
+        <div
+          key={step.key}
+          className={[
+            styles.flowStep,
+            step.active ? styles.flowActive : '',
+            step.done ? styles.flowDone : '',
+          ].filter(Boolean).join(' ')}
+        >
+          <span className={styles.flowDot}>{index + 1}</span>
+          <span>{step.label}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -31,6 +58,7 @@ export function MeseroPage() {
     productosPorCategoria,
     carrito, agregarProducto, quitarProducto, eliminarProducto, cambiarNota, total,
     pedidos,
+    entregarPedido,
     enviarPedido, enviando,
     ultimoPedidoId,
     loading, toasts, connected,
@@ -69,6 +97,13 @@ export function MeseroPage() {
         {toasts.map(t => <Toast key={t.id} toast={t} />)}
       </div>
 
+      <OrderFlow
+        mesaActiva={mesaActiva}
+        carrito={carrito}
+        enviando={enviando}
+        ultimoPedidoId={ultimoPedidoId}
+      />
+
       {/* ── Layout principal ──────────────────────── */}
       <main className={styles.main}>
 
@@ -92,7 +127,7 @@ export function MeseroPage() {
                 </span>
               )}
             </h2>
-            <PedidosActivos pedidos={pedidos} />
+            <PedidosActivos pedidos={pedidos} onEntregar={entregarPedido} />
           </section>
         </aside>
 

@@ -94,6 +94,79 @@
 .toastError   { background: rgba(224,82,82,0.12);   border: 1px solid rgba(224,82,82,0.35);  color: #EF9A9A; }
 .toastWarning { background: rgba(242,167,75,0.12);  border: 1px solid rgba(242,167,75,0.35); color: #FFB74D; }
 
+/* ── Flujo del pedido ─────────────────────────────────── */
+.orderFlow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px 24px 0;
+}
+
+.flowStep {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.025);
+  overflow: hidden;
+}
+
+.flowStep::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: linear-gradient(90deg, rgba(200,90,26,0.18), rgba(52,140,132,0.18));
+}
+
+.flowDot {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  color: currentColor;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.flowActive {
+  color: var(--text-cream);
+  border-color: rgba(52,140,132,0.45);
+  animation: flowActive 1.6s ease-in-out infinite;
+}
+
+.flowDone {
+  color: #9be2d9;
+}
+
+.flowDone::before {
+  width: 100%;
+  animation: flowFill 0.55s var(--ease-out-expo) both;
+}
+
+.flowStep > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes flowActive {
+  0%, 100% { transform: translate3d(0,0,0); }
+  50% { transform: translate3d(0,-2px,0); }
+}
+
+@keyframes flowFill {
+  from { transform: translate3d(-100%,0,0); }
+  to { transform: translate3d(0,0,0); }
+}
+
 /* ── Layout principal ─────────────────────────────────── */
 .main {
   flex: 1;
@@ -146,4 +219,5 @@
   .main { grid-template-columns: 1fr; }
   .carritoCol { position: static; }
   .toastStack { right: 12px; top: 60px; }
+  .orderFlow { grid-template-columns: repeat(2, 1fr); padding: 12px; }
 }

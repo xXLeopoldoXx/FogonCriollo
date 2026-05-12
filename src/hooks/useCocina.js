@@ -45,6 +45,7 @@ export function useCocina() {
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState('');
   const [connected,    setConnected]    = useState(false);
+  const [alertaPedido, setAlertaPedido] = useState(null);
   const initialLoad    = useRef(true);
 
   /* ── Carga inicial ────────────────────────────────── */
@@ -80,6 +81,8 @@ export function useCocina() {
 
       // Marcar como nuevo SOLO si ya pasó la carga inicial
       if (!initialLoad.current) {
+        setAlertaPedido(pedido);
+        setTimeout(() => setAlertaPedido(null), 5200);
         setNuevosIds(prev => new Set([...prev, pedido.id_pedido]));
         // Quitar el flag de "nuevo" después de 5 segundos
         setTimeout(() => {
@@ -146,6 +149,7 @@ export function useCocina() {
   return {
     pedidos: pedidosOrdenados,
     nuevosIds,
+    alertaPedido,
     contadores, avanzarEstado,
     loading, error, connected,
   };

@@ -136,13 +136,19 @@ CREATE OR REPLACE VIEW public.v_cocina_pedidos AS
 SELECT p.id_pedido, p.fecha_hora,
     EXTRACT(EPOCH FROM (NOW() - p.fecha_hora))::INTEGER / 60 AS minutos_espera,
     p.estado, m.numero AS numero_mesa, m.piso, me.nombre AS mesero,
-    jsonb_agg(jsonb_build_object('producto', pr.nombre, 'cantidad', dp.cantidad) ORDER BY pr.nombre) AS items
+    jsonb_agg(jsonb_build_object(
+        'producto', pr.nombre,
+        'cantidad', dp.cantidad,
+        'nota', dp.nota,
+        'imagen_url', COALESCE(pr.imagen_url, '')
+    ) ORDER BY dp.id_detalle) AS items
+
 FROM public.pedido p
 JOIN public.mesa m ON m.id_mesa = p.id_mesa
 JOIN public.mesero me ON me.id_mesero = p.id_mesero
 JOIN public.detalle_pedido dp ON dp.id_pedido = p.id_pedido
 JOIN public.producto pr ON pr.id_producto = dp.id_producto
-WHERE p.estado IN ('PENDIENTE'::estado_pedido, 'EN_PROCESO'::estado_pedido)
+WHERE p.estado IN ('PENDIENTE'::estado_pedido, 'EN_PROCESO'::estado_pedido, 'LISTO'::estado_pedido)
 GROUP BY p.id_pedido, m.numero, m.piso, me.nombre ORDER BY p.fecha_hora ASC;
 
 -- Vista: mesero

@@ -33,7 +33,7 @@ router.get   ('/pedidos/mesero/:id_mesero',
               pedidoCtrl.getPedidosMesero);
 
 router.patch ('/pedidos/:id/estado',
-              authMiddleware, requireRol('COCINERO', 'ADMIN'),
+              authMiddleware, requireRol('COCINERO', 'ADMIN', 'MESERO'),
               pedidoCtrl.cambiarEstado);
 
 // ── Vista pública del cliente (sin autenticación) ────────

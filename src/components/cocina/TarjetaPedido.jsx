@@ -155,6 +155,9 @@ export function TarjetaPedido({ pedido, onAvanzar, isNuevo }) {
       <ul className={styles.items}>
         {items.map((item, i) => (
           <li key={i} className={styles.item}>
+            {item.imagen_url && (
+              <img className={styles.itemImg} src={item.imagen_url} alt="" loading="lazy" />
+            )}
             <span className={styles.itemCant}>{item.cantidad}×</span>
             <div className={styles.itemData}>
               <span className={styles.itemNombre}>{item.producto}</span>

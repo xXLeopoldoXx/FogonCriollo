@@ -4,6 +4,7 @@
 
 
 const { query } = require('../db/pool');
+let schemaReadyPromise = null;
 
 const PRODUCT_IMAGES = [
   { test: /pollo entero/i, url: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?auto=format&fit=crop&w=640&q=80' },
@@ -31,6 +32,8 @@ async function ensureProductoImageColumn() {
 }
 
 async function ensurePedidoExtras() {
+  if (schemaReadyPromise) return schemaReadyPromise;
+  schemaReadyPromise = (async () => {
   await ensureProductoImageColumn();
   await query('ALTER TABLE public.detalle_pedido ADD COLUMN IF NOT EXISTS nota TEXT');
   await query(`
@@ -49,24 +52,29 @@ async function ensurePedidoExtras() {
         VALUES (p_id_mesa, p_id_mesero)
         RETURNING id_pedido INTO v_id_pedido;
 
-        FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
-            SELECT precio INTO v_precio FROM public.producto
-            WHERE id_producto = (v_item->>'id_producto')::INTEGER AND disponible = TRUE;
-            IF v_precio IS NULL THEN
-                RAISE EXCEPTION 'Producto % no disponible', v_item->>'id_producto';
-            END IF;
-            INSERT INTO public.detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario, nota)
-            VALUES (
-              v_id_pedido,
-              (v_item->>'id_producto')::INTEGER,
-              (v_item->>'cantidad')::INTEGER,
-              v_precio,
-              NULLIF(TRIM(v_item->>'nota'), '')
-            );
-        END LOOP;
-        RETURN v_id_pedido;
-    END; $$;
-  `);
+      FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+              SELECT precio INTO v_precio FROM public.producto
+              WHERE id_producto = (v_item->>'id_producto')::INTEGER AND disponible = TRUE;
+              IF v_precio IS NULL THEN
+                  RAISE EXCEPTION 'Producto % no disponible', v_item->>'id_producto';
+              END IF;
+              INSERT INTO public.detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario, nota)
+              VALUES (
+                v_id_pedido,
+                (v_item->>'id_producto')::INTEGER,
+                (v_item->>'cantidad')::INTEGER,
+                v_precio,
+                NULLIF(TRIM(v_item->>'nota'), '')
+              );
+          END LOOP;
+          RETURN v_id_pedido;
+      END; $$;
+    `);
+  })().catch(err => {
+    schemaReadyPromise = null;
+    throw err;
+  });
+  return schemaReadyPromise;
 }
 
 //GET /api/mesas
@@ -106,6 +114,7 @@ async function getProductos(req, res) {
 //POST /api/pedidos
 async function crearPedido(req, res) {
   const { id_mesa, id_mesero, items } = req.body;
+  const requester = req.user ?? {};
 
   // Validaciones de entrada
   if (!id_mesa)          return res.status(400).json({ message: 'Mesa requerida.' });
@@ -122,11 +131,36 @@ async function crearPedido(req, res) {
     if (!item.cantidad || item.cantidad < 1 || item.cantidad > 20)
       return res.status(400).json({ message: `Cantidad inválida para el producto ${item.id_producto}.` });
     if (item.nota && typeof item.nota === 'string' && item.nota.length > 100)
-      return res.status(400).json({ message: 'La nota de un ítem no puede superar 100 caracteres.' });
+    return res.status(400).json({ message: 'La nota de un ítem no puede superar 100 caracteres.' });
+  }
+
+  if (requester.rol === 'MESERO' && Number(requester.id_mesero) !== Number(id_mesero)) {
+    return res.status(403).json({ message: 'No puedes crear pedidos para otro mesero.' });
+  }
+
+  const idsProductos = items.map(i => Number(i.id_producto));
+  if (new Set(idsProductos).size !== idsProductos.length) {
+    return res.status(400).json({ message: 'Hay productos repetidos en el pedido. Agrupa cantidades en una sola línea.' });
   }
 
   try {
     await ensurePedidoExtras();
+
+    const { rows: productosDb } = await query(
+      `SELECT id_producto, nombre, precio, disponible
+       FROM producto
+       WHERE id_producto = ANY($1::int[])`,
+      [idsProductos]
+    );
+
+    if (productosDb.length !== idsProductos.length) {
+      return res.status(400).json({ message: 'Uno o más productos no existen.' });
+    }
+
+    const noDisponible = productosDb.find(p => !p.disponible);
+    if (noDisponible) {
+      return res.status(409).json({ message: `Producto no disponible: ${noDisponible.nombre}` });
+    }
 
     // Llamar a la función de BD (nota incluida en el JSON si existe)
     const itemsConNota = items.map(i => ({
@@ -196,8 +230,25 @@ async function getPedidosMesero(req, res) {
 //GET /api/pedidos/cocina
 async function getPedidosCocina(req, res) {
   try {
+    await ensurePedidoExtras();
     const { rows } = await query(
-      'SELECT * FROM v_cocina_pedidos ORDER BY fecha_hora ASC'
+      `SELECT p.id_pedido, p.fecha_hora,
+              EXTRACT(EPOCH FROM (NOW() - p.fecha_hora))::INTEGER / 60 AS minutos_espera,
+              p.estado, m.numero AS numero_mesa, m.piso, me.nombre AS mesero,
+              jsonb_agg(jsonb_build_object(
+                'producto', pr.nombre,
+                'cantidad', dp.cantidad,
+                'nota', dp.nota,
+                'imagen_url', COALESCE(pr.imagen_url, '')
+              ) ORDER BY dp.id_detalle) AS items
+       FROM pedido p
+       JOIN mesa m ON m.id_mesa = p.id_mesa
+       JOIN mesero me ON me.id_mesero = p.id_mesero
+       JOIN detalle_pedido dp ON dp.id_pedido = p.id_pedido
+       JOIN producto pr ON pr.id_producto = dp.id_producto
+       WHERE p.estado IN ('PENDIENTE'::estado_pedido, 'EN_PROCESO'::estado_pedido, 'LISTO'::estado_pedido)
+       GROUP BY p.id_pedido, m.numero, m.piso, me.nombre
+       ORDER BY p.fecha_hora ASC`
     );
     res.json(rows);
   } catch (err) {
@@ -211,17 +262,49 @@ async function cambiarEstado(req, res) {
   const { id }     = req.params;
   const { estado } = req.body;
   const username   = req.user?.username ?? 'sistema';
+  const requester  = req.user ?? {};
 
   if (!id || isNaN(Number(id)))
     return res.status(400).json({ message: 'ID de pedido inválido.' });
 
-  const ESTADOS_VALIDOS = ['EN_PROCESO', 'LISTO', 'ENTREGADO'];
+const ESTADOS_VALIDOS = ['EN_PROCESO', 'LISTO', 'ENTREGADO'];
   if (!estado || !ESTADOS_VALIDOS.includes(estado))
     return res.status(400).json({
       message: `Estado inválido. Valores permitidos: ${ESTADOS_VALIDOS.join(', ')}.`
     });
 
   try {
+    const { rows: estadoRows } = await query(
+      'SELECT estado, id_mesero FROM pedido WHERE id_pedido = $1',
+      [id]
+    );
+    if (estadoRows.length === 0)
+      return res.status(404).json({ message: 'Pedido no encontrado.' });
+
+    const estadoActual = estadoRows[0].estado;
+    const pedidoMesero = estadoRows[0].id_mesero;
+
+    if (requester.rol === 'MESERO') {
+      if (estado !== 'ENTREGADO') {
+        return res.status(403).json({ message: 'El mesero solo puede marcar pedidos como entregados.' });
+      }
+      if (Number(requester.id_mesero) !== Number(pedidoMesero)) {
+        return res.status(403).json({ message: 'No puedes entregar pedidos de otro mesero.' });
+      }
+    }
+
+    const transiciones = {
+      PENDIENTE: ['EN_PROCESO'],
+      EN_PROCESO: ['LISTO'],
+      LISTO: ['ENTREGADO'],
+    };
+
+    if (!transiciones[estadoActual]?.includes(estado)) {
+      return res.status(409).json({
+        message: `Cambio no permitido: ${estadoActual} → ${estado}.`,
+      });
+    }
+
     await query(
       `SELECT fn_cambiar_estado_pedido($1, $2::estado_pedido, $3)`,
       [id, estado, username]
@@ -366,13 +449,25 @@ async function getCategorias(_req, res) {
 }
 
 function parseProductoBody(body) {
+  const imagen = String(body.imagen_url ?? '').trim();
   return {
-    nombre: String(body.nombre ?? '').trim(),
+    nombre: String(body.nombre ?? '').trim().slice(0, 150),
     precio: Number(body.precio),
     disponible: body.disponible !== false,
     id_categoria: Number(body.id_categoria),
-    imagen_url: String(body.imagen_url ?? '').trim() || null,
+    imagen_url: imagen || null,
   };
+}
+
+function isSafeImageUrl(value) {
+  if (!value) return true;
+  if (value.length > 700) return false;
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
 }
 
 async function crearProducto(req, res) {
@@ -380,6 +475,8 @@ async function crearProducto(req, res) {
   if (!data.nombre) return res.status(400).json({ message: 'Nombre requerido.' });
   if (!Number.isFinite(data.precio) || data.precio < 0) return res.status(400).json({ message: 'Precio inválido.' });
   if (!Number.isInteger(data.id_categoria)) return res.status(400).json({ message: 'Categoría inválida.' });
+  if (!isSafeImageUrl(data.imagen_url)) return res.status(400).json({ message: 'URL de imagen inválida.' });
+
   try {
     await ensureProductoImageColumn();
     const { rows } = await query(
@@ -402,6 +499,7 @@ async function actualizarProducto(req, res) {
   if (!data.nombre) return res.status(400).json({ message: 'Nombre requerido.' });
   if (!Number.isFinite(data.precio) || data.precio < 0) return res.status(400).json({ message: 'Precio inválido.' });
   if (!Number.isInteger(data.id_categoria)) return res.status(400).json({ message: 'Categoría inválida.' });
+  if (!isSafeImageUrl(data.imagen_url)) return res.status(400).json({ message: 'URL de imagen inválida.' });
 
   try {
     await ensureProductoImageColumn();
@@ -432,7 +530,15 @@ async function eliminarProducto(req, res) {
     if (!rowCount) return res.status(404).json({ message: 'Producto no encontrado.' });
     res.status(204).send();
   } catch (err) {
-    res.status(409).json({ message: 'No se puede eliminar un producto usado en pedidos. Desactívalo.' });
+    if (err.code === '23503') {
+      await query('UPDATE producto SET disponible = false WHERE id_producto = $1', [id]);
+      return res.json({
+        message: 'Producto usado en pedidos anteriores. Se ocultó de la carta en lugar de eliminarse.',
+        id_producto: Number(id),
+        disponible: false,
+      });
+    }
+    res.status(500).json({ message: err.message });
   }
 }
 

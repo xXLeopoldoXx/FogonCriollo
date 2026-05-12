@@ -15,14 +15,14 @@ const ESTADO_CFG = {
   ENTREGADO:  { label: 'Entregado',   color: 'entregado' },
 };
 
-/* Íconos de cada paso */
-const PASO_ICONS = ['📋', '🔥', '✅', '🍽️'];
+const PASO_ICONS = ['01', '02', '03', '04'];
+
 
 function getClienteURL(idPedido) {
   return `${window.location.origin}/cliente/${idPedido}`;
 }
 
-function PedidoItem({ pedido }) {
+function PedidoItem({ pedido, onEntregar }) {
   const [copiado, setCopiado] = useState(false);
   const cfg    = ESTADO_CFG[pedido.estado] ?? { label: pedido.estado, color: 'pendiente' };
   const paso   = PASO[pedido.estado] ?? 0;
@@ -74,25 +74,32 @@ function PedidoItem({ pedido }) {
 
       {/* ── Botón compartir link ────────────────── */}
       {pedido.estado !== 'ENTREGADO' && (
-        <button
-          className={`${styles.shareBtn} ${copiado ? styles.shareBtnOk : ''}`}
-          onClick={compartir}
-          title="Copiar link de seguimiento para el cliente"
-        >
-          {copiado ? '✓ Link copiado' : '🔗 Link al cliente'}
-        </button>
+        <div className={styles.actionsRow}>
+          <button
+            className={`${styles.shareBtn} ${copiado ? styles.shareBtnOk : ''}`}
+            onClick={compartir}
+            title="Copiar link de seguimiento para el cliente"
+          >
+            {copiado ? 'Link copiado' : 'Link al cliente'}
+          </button>
+          {pedido.estado === 'LISTO' && (
+            <button className={styles.deliverBtn} onClick={() => onEntregar(pedido.id_pedido)}>
+              Entregar
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
 }
 
-export function PedidosActivos({ pedidos }) {
+export function PedidosActivos({ pedidos, onEntregar = () => {} }) {
   const activos = pedidos.filter(p => p.estado !== 'ENTREGADO');
 
   if (activos.length === 0) {
     return (
       <div className={styles.empty}>
-        <span>🍃</span>
+        <span>0</span>
         <p>Sin pedidos activos</p>
       </div>
     );
@@ -101,7 +108,7 @@ export function PedidosActivos({ pedidos }) {
   return (
     <div className={styles.list}>
       {activos.map(p => (
-        <PedidoItem key={p.id_pedido} pedido={p} />
+        <PedidoItem key={p.id_pedido} pedido={p} onEntregar={onEntregar} />
       ))}
     </div>
   );

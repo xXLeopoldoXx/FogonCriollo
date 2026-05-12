@@ -5,18 +5,31 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
-  getMesas, getProductos, crearPedido, getPedidosMesero,
+  getMesas, getProductos, crearPedido, getPedidosMesero, cambiarEstadoPedido,
 } from '../services/pedidoService';
 import { connectSocket, disconnectSocket, EVENTS } from '../services/socketService';
 
-/* ── Constantes de validación ────────────────────────── */
+//Constantes de validación
 const MAX_ITEMS_DISTINTOS = 15;
 const MAX_UNIDADES_ITEM   = 20;
 const TOAST_DURATION_MS   = 3500;
 
-/* ── Toast queue helper ─────────────────────────────── */
+// Toast queue helper
 function makeToast(message, type = 'success') {
   return { id: Date.now() + Math.random(), message, type };
+}
+
+function toMoney(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeProducto(producto) {
+  return {
+    ...producto,
+    id_producto: Number(producto.id_producto),
+    precio: toMoney(producto.precio),
+  };
 }
 
 export function useMesero() {
@@ -33,7 +46,7 @@ export function useMesero() {
   const [connected,  setConnected]  = useState(false);
   const [ultimoPedidoId, setUltimoPedidoId] = useState(null);
 
-  /* ── Helpers de toast ────────────────────────────── */
+  // Helpers de toast
   const pushToast = useCallback((message, type = 'success') => {
     const t = makeToast(message, type);
     setToasts(prev => [...prev, t]);
@@ -46,19 +59,20 @@ export function useMesero() {
   const pushSuccess = useCallback((msg) => pushToast(msg,     'success'), [pushToast]);
   const pushWarning = useCallback((msg) => pushToast(msg,     'warning'), [pushToast]);
 
-  /* ── Carga inicial ────────────────────────────────── */
+  // Carga inicial
   useEffect(() => {
     if (!token || !user?.id) return;
 
     async function init() {
+      const idMesero = user.id_mesero ?? user.id;
       try {
         const [m, p, pd] = await Promise.all([
           getMesas(token),
           getProductos(token),
-          getPedidosMesero(token, user.id),
+          getPedidosMesero(token, idMesero),
         ]);
         setMesas(m);
-        setProductos(p);
+        setProductos(p.map(normalizeProducto));
         setPedidos(pd);
       } catch (e) {
         pushError(`Error al cargar datos: ${e.message}`);
@@ -68,9 +82,9 @@ export function useMesero() {
     }
 
     init();
-  }, [token, user?.id, pushError]);
+  }, [token, user?.id, user?.id_mesero, pushError]);
 
-  /* ── Socket.io ────────────────────────────────────── */
+  // Socket.io
   useEffect(() => {
     const socket = connectSocket(token);
 
@@ -91,14 +105,15 @@ export function useMesero() {
     return () => disconnectSocket();
   }, [token, pushSuccess]);
 
-  /* ── Carrito: agregar producto ────────────────────── */
+  // Carrito: agregar producto 
   const agregarProducto = useCallback((producto) => {
+    const productoSeguro = normalizeProducto(producto);
     setCarrito(prev => {
-      const existe = prev.find(i => i.id_producto === producto.id_producto);
+      const existe = prev.find(i => i.id_producto === productoSeguro.id_producto);
 
       // Validar límite de unidades
       if (existe && existe.cantidad >= MAX_UNIDADES_ITEM) {
-        pushWarning(`Máximo ${MAX_UNIDADES_ITEM} unidades de "${producto.nombre}"`);
+        pushWarning(`Máximo ${MAX_UNIDADES_ITEM} unidades de "${productoSeguro.nombre}"`);
         return prev;
       }
 
@@ -110,16 +125,16 @@ export function useMesero() {
 
       if (existe) {
         return prev.map(i =>
-          i.id_producto === producto.id_producto
+          i.id_producto === productoSeguro.id_producto
             ? { ...i, cantidad: i.cantidad + 1 }
             : i
         );
       }
-      return [...prev, { ...producto, cantidad: 1, nota: '' }];
+      return [...prev, { ...productoSeguro, cantidad: 1, nota: '' }];
     });
   }, [pushWarning]);
 
-  /* ── Carrito: quitar una unidad ───────────────────── */
+  // Carrito: quitar una unidad 
   const quitarProducto = useCallback((id_producto) => {
     setCarrito(prev => {
       const item = prev.find(i => i.id_producto === id_producto);
@@ -131,12 +146,12 @@ export function useMesero() {
     });
   }, []);
 
-  /* ── Carrito: eliminar ítem completo ──────────────── */
+  // Carrito: eliminar ítem completo
   const eliminarProducto = useCallback((id_producto) => {
     setCarrito(prev => prev.filter(i => i.id_producto !== id_producto));
   }, []);
 
-  /* ── Carrito: modificar nota de un ítem ───────────── */
+  // Carrito: modificar nota de un ítem
   const cambiarNota = useCallback((id_producto, nota) => {
     if (nota.length > 100) return; // guardado silencioso del límite
     setCarrito(prev =>
@@ -144,17 +159,17 @@ export function useMesero() {
     );
   }, []);
 
-  /* ── Total del carrito ────────────────────────────── */
-  const total = carrito.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
+  // Total del carrito
+  const total = carrito.reduce((acc, i) => acc + toMoney(i.precio) * Number(i.cantidad), 0);
 
-  /* ── Validación completa antes de enviar ──────────── */
+  // Validación completa antes de enviar
   function validarPedido() {
     if (!mesaActiva)       { pushError('Selecciona una mesa primero.'); return false; }
     if (carrito.length === 0) { pushError('Agrega al menos un producto.'); return false; }
     if (total <= 0)        { pushError('El total del pedido no es válido.'); return false; }
 
     // Validar que todos los precios sean números positivos
-    const precioInvalido = carrito.find(i => !Number.isFinite(i.precio) || i.precio <= 0);
+    const precioInvalido = carrito.find(i => !Number.isFinite(toMoney(i.precio)) || toMoney(i.precio) <= 0);
     if (precioInvalido) {
       pushError(`Precio inválido para "${precioInvalido.nombre}"`);
       return false;
@@ -163,7 +178,7 @@ export function useMesero() {
     return true;
   }
 
-  /* ── Enviar pedido ────────────────────────────────── */
+  // Enviar pedido
   const enviarPedido = useCallback(async () => {
     if (!validarPedido()) return;
 
@@ -203,7 +218,19 @@ export function useMesero() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mesaActiva, carrito, token, user, total, pushError, pushSuccess]);
 
-  /* ── Agrupaciones ─────────────────────────────────── */
+  const entregarPedido = useCallback(async (id_pedido) => {
+    try {
+      await cambiarEstadoPedido(token, id_pedido, 'ENTREGADO');
+      setPedidos(prev => prev.map(p =>
+        p.id_pedido === id_pedido ? { ...p, estado: 'ENTREGADO' } : p
+      ));
+      pushSuccess(`Pedido #${id_pedido} entregado`);
+    } catch (e) {
+      pushError(e.message ?? 'No se pudo marcar como entregado.');
+    }
+  }, [token, pushError, pushSuccess]);
+
+  // Agrupaciones
   const mesasPorPiso = mesas.reduce((acc, m) => {
     const k = `Piso ${m.piso}`;
     acc[k] = acc[k] ? [...acc[k], m] : [m];
@@ -221,6 +248,7 @@ export function useMesero() {
     productosPorCategoria,
     carrito, agregarProducto, quitarProducto, eliminarProducto, cambiarNota, total,
     pedidos,
+    entregarPedido,
     enviarPedido, enviando,
     ultimoPedidoId,
     loading, toasts, connected,

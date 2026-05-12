@@ -19,6 +19,16 @@ async function handleJson(res, fallback) {
   throw new Error(message);
 }
 
+function normalizeProducto(producto) {
+  return {
+    ...producto,
+    id_producto: Number(producto.id_producto),
+    id_categoria: Number(producto.id_categoria),
+    precio: Number(producto.precio),
+    disponible: producto.disponible !== false,
+  };
+}
+
 /** GET /api/admin/resumen-hoy → usa v_resumen_hoy */
 export async function getResumenHoy(token) {
   const res = await fetch(`${API_BASE}/admin/resumen-hoy`, { headers: authHeaders(token) });
@@ -74,7 +84,8 @@ export async function getAdminProductos(token) {
   const res = await fetch(`${API_BASE}/admin/productos`, {
     headers: authHeaders(token),
   });
-  return handleJson(res, 'Error al obtener productos');
+  const data = await handleJson(res, 'Error al obtener productos');
+  return data.map(normalizeProducto);
 }
 
 export async function crearAdminProducto(token, producto) {
@@ -83,7 +94,8 @@ export async function crearAdminProducto(token, producto) {
     headers: authHeaders(token),
     body: JSON.stringify(producto),
   });
-  return handleJson(res, 'Error al crear producto');
+  const data = await handleJson(res, 'Error al crear producto');
+  return normalizeProducto(data);
 }
 
 export async function actualizarAdminProducto(token, id, producto) {
@@ -92,7 +104,8 @@ export async function actualizarAdminProducto(token, id, producto) {
     headers: authHeaders(token),
     body: JSON.stringify(producto),
   });
-  return handleJson(res, 'Error al actualizar producto');
+  const data = await handleJson(res, 'Error al actualizar producto');
+  return normalizeProducto(data);
 }
 
 export async function eliminarAdminProducto(token, id) {

@@ -9,7 +9,7 @@ import styles              from './CocinaPage.module.css';
 
 export function CocinaPage() {
   const { user, signOut } = useAuth();
-  const { pedidos, nuevosIds, contadores, avanzarEstado, loading, error, connected } = useCocina();
+  const { pedidos, nuevosIds, alertaPedido, contadores, avanzarEstado, loading, error, connected } = useCocina();
 
   if (loading) {
     return (
@@ -46,6 +46,16 @@ export function CocinaPage() {
 
       {error && (
         <div className={styles.errorBanner} role="alert">{error}</div>
+      )}
+
+      {alertaPedido && (
+        <div className={styles.incomingAlert} role="status" aria-live="polite">
+          <span className={styles.incomingPulse} />
+          <div>
+            <strong>Pedido nuevo #{alertaPedido.id_pedido}</strong>
+            <small>Mesa {alertaPedido.numero_mesa} · Piso {alertaPedido.piso}</small>
+          </div>
+        </div>
       )}
 
       {/* ── Kanban ────────────────────────────────── */}

@@ -1,5 +1,6 @@
 .root {
   min-height: 100dvh;
+  position: relative;
   background:
     radial-gradient(circle at 12% 0%, rgba(200,90,26,0.24), transparent 34%),
     radial-gradient(circle at 90% 12%, rgba(52,140,132,0.18), transparent 30%),
@@ -7,6 +8,32 @@
   color: var(--text-cream);
   overflow-x: hidden;
 }
+
+.root::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(242,167,75,0.11), transparent 20%),
+    radial-gradient(circle at 80% 30%, rgba(52,140,132,0.12), transparent 18%),
+    radial-gradient(circle at 50% 80%, rgba(76,175,80,0.08), transparent 24%);
+  transform: translate3d(0,0,0);
+  animation: ambientDrift 16s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.root > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes ambientDrift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(2%, 1.5%, 0) scale(1.06); }
+}
+
 
 .rootListo {
   background:
@@ -185,13 +212,25 @@
   border-radius: var(--radius-sm);
   padding: 14px;
   color: inherit;
+  animation: queueEnter 0.42s var(--ease-out-expo) both;
   transition: transform var(--t-base), border-color var(--t-base), background var(--t-base);
+  will-change: transform;
 }
 
 .queueItem:hover {
-  transform: translateY(-2px);
+  transform: translate3d(0,-2px,0);
   border-color: rgba(52,140,132,0.55);
   background: rgba(52,140,132,0.08);
+}
+
+.queueItem:nth-child(2) { animation-delay: 0.04s; }
+.queueItem:nth-child(3) { animation-delay: 0.08s; }
+.queueItem:nth-child(4) { animation-delay: 0.12s; }
+.queueItem:nth-child(5) { animation-delay: 0.16s; }
+
+@keyframes queueEnter {
+  from { opacity: 0; transform: translate3d(0,14px,0) scale(0.98); }
+  to { opacity: 1; transform: translate3d(0,0,0) scale(1); }
 }
 
 .queueRank {
@@ -269,6 +308,17 @@
   border-radius: var(--radius-md);
   padding: 20px;
   backdrop-filter: blur(10px);
+  transform: translate3d(0,0,0);
+  animation: panelRise 0.48s var(--ease-out-expo) both;
+  will-change: transform, opacity;
+}
+
+.infoPanel { animation-delay: 0.05s; }
+.itemsSection { animation-delay: 0.1s; }
+
+@keyframes panelRise {
+  from { opacity: 0; transform: translate3d(0,18px,0) scale(0.985); }
+  to { opacity: 1; transform: translate3d(0,0,0) scale(1); }
 }
 
 .itemsSection {
@@ -280,20 +330,36 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin: 28px 0;
-  padding: 18px 0 4px;
+  margin: 30px 0 28px;
+  padding: 40px 0 10px;
+  isolation: isolate;
 }
 
-.stage::before {
-  content: "";
+.stageTrack {
   position: absolute;
-  top: 39px;
-  left: 11%;
-  right: 11%;
+  top: 24px;
+  left: 7%;
+  right: 7%;
   height: 4px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--brand), #348c84, var(--success));
-  opacity: 0.45;
+  background: rgba(245,237,216,0.14);
+  overflow: visible;
+}
+
+.stageFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--progress);
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f2a74b, #38a79b, #8ee6a6);
+  transform-origin: left center;
+  animation: flowFill 1.4s linear infinite;
+  will-change: background-position;
+}
+
+@keyframes flowFill {
+  from { background-position: 0 0; }
+  to { background-position: 80px 0; }
 }
 
 .station {
@@ -304,11 +370,12 @@
   gap: 8px;
   color: var(--text-muted);
   font-size: 12px;
+  transform: translateZ(0);
 }
 
 .stationIcon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -316,6 +383,9 @@
   border: 2px solid rgba(245,237,216,0.16);
   color: var(--text-dim);
   font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  transition: color var(--t-base), border-color var(--t-base), background var(--t-base);
 }
 
 .stationActive {
@@ -327,26 +397,70 @@
   border-color: rgba(255,255,255,0.45);
   color: white;
   box-shadow: 0 10px 30px rgba(52,140,132,0.22);
+  animation: nodeBreathe 1.8s ease-in-out infinite;
+}
+
+@keyframes nodeBreathe {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50% { transform: translate3d(0,-2px,0) scale(1.04); }
 }
 
 .runner {
   position: absolute;
   z-index: 2;
-  top: 29px;
-  left: calc(11% + (var(--runner-step) * 39%));
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #fff8e6;
+  top: -8px;
+  left: var(--progress);
+  width: 20px;
+  height: 20px;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 35% 30%, #fff8e6 0 18%, transparent 19%),
+    linear-gradient(135deg, #f2a74b, #38a79b);
   box-shadow: 0 0 24px rgba(242,167,75,0.75);
   transform: translateX(-50%);
-  transition: left 0.7s var(--ease-out-expo);
-  animation: runnerPulse 1.4s ease-in-out infinite;
+  transition: left 0.7s var(--ease-out-expo), border-radius var(--t-base);
+  animation: runnerPulse 1.2s ease-in-out infinite, runnerSpin 2.4s linear infinite;
+  will-change: transform, left;
 }
 
 @keyframes runnerPulse {
-  0%, 100% { transform: translateX(-50%) scale(0.92); }
-  50% { transform: translateX(-50%) scale(1.08); }
+  0%, 100% { transform: translate3d(-50%,0,0) scale(0.92); }
+  50% { transform: translate3d(-50%,-3px,0) scale(1.08); }
+}
+
+@keyframes runnerSpin {
+  to { rotate: 360deg; }
+}
+
+.heatField {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.heatField span {
+  position: absolute;
+  bottom: 4px;
+  width: 5px;
+  height: 42px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, rgba(242,167,75,0.26), transparent);
+  opacity: 0.5;
+  transform: translate3d(0,0,0);
+  animation: heatRise 2.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.heatField span:nth-child(1) { left: 18%; animation-delay: 0s; }
+.heatField span:nth-child(2) { left: 42%; animation-delay: 0.35s; }
+.heatField span:nth-child(3) { left: 66%; animation-delay: 0.7s; }
+.heatField span:nth-child(4) { left: 84%; animation-delay: 1.05s; }
+
+@keyframes heatRise {
+  0%, 100% { opacity: 0.12; transform: translate3d(0,14px,0) scaleY(0.8); }
+  50% { opacity: 0.62; transform: translate3d(0,-16px,0) scaleY(1.15); }
 }
 
 .timeline {
@@ -425,6 +539,17 @@
   border-radius: var(--radius-sm);
   padding: 10px;
   min-width: 0;
+  animation: itemLift 0.42s var(--ease-out-expo) both;
+  will-change: transform, opacity;
+}
+
+.itemCard:nth-child(2) { animation-delay: 0.04s; }
+.itemCard:nth-child(3) { animation-delay: 0.08s; }
+.itemCard:nth-child(4) { animation-delay: 0.12s; }
+
+@keyframes itemLift {
+  from { opacity: 0; transform: translate3d(0,16px,0); }
+  to { opacity: 1; transform: translate3d(0,0,0); }
 }
 
 .itemCard img {
@@ -547,5 +672,21 @@
   .estadoPill {
     min-width: 0;
     width: fit-content;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root::before,
+  .stageFill,
+  .runner,
+  .stationActive .stationIcon,
+  .heatField span,
+  .queueItem,
+  .statusPanel,
+  .infoPanel,
+  .itemsSection,
+  .itemCard,
+  .loaderPlate span {
+    animation: none;
   }
 }
