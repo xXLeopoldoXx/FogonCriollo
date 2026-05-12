@@ -15,7 +15,7 @@ export function useLogin() {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
-  async function handleLogin({ username, password, rol }) {
+   async function handleLogin({ username, password }) {
     setError('');
     if (!username.trim() || !password.trim()) {
       setError('Por favor completa todos los campos.');
@@ -23,7 +23,7 @@ export function useLogin() {
     }
     setLoading(true);
     try {
-      const data = await login({ username, password, rol });
+      const data = await login({ username, password });
       storeSession(data);
       signIn(data);
       navigate(ROLE_ROUTES[data.usuario.rol] ?? '/');

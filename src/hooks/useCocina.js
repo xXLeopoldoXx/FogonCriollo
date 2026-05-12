@@ -1,9 +1,8 @@
-// ============================================================
+
 // El Fogón Criollo – useCocina Hook
 // Lógica completa del panel de cocina
-// ============================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { connectSocket, disconnectSocket, EVENTS } from '../services/socketService';
 
@@ -16,7 +15,7 @@ function authHeaders(token) {
 async function getPedidosCocina(token) {
   const res = await fetch(`${API_BASE}/pedidos/cocina`, { headers: authHeaders(token) });
   if (!res.ok) throw new Error('Error al obtener pedidos');
-  return res.json(); // usa v_cocina_pedidos
+  return res.json();
 }
 
 async function cambiarEstado(token, id_pedido, estado) {
@@ -25,24 +24,30 @@ async function cambiarEstado(token, id_pedido, estado) {
     headers: authHeaders(token),
     body:    JSON.stringify({ estado }),
   });
-  if (!res.ok) throw new Error('Error al cambiar estado');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message ?? 'Error al cambiar estado');
+  }
   return res.json();
 }
 
-// Transiciones válidas según la BD
 const SIGUIENTE_ESTADO = {
   PENDIENTE:  'EN_PROCESO',
   EN_PROCESO: 'LISTO',
 };
 
-export function useCocina() {
-  const { token } = useAuth();
-  const [pedidos,   setPedidos]   = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState('');
-  const [connected, setConnected] = useState(false);
+const ORDEN = { PENDIENTE: 0, EN_PROCESO: 1, LISTO: 2 };
 
-  // Carga inicial
+export function useCocina() {
+  const { token }       = useAuth();
+  const [pedidos,      setPedidos]      = useState([]);
+  const [nuevosIds,    setNuevosIds]    = useState(new Set()); // IDs que son "nuevos" (para sonido)
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState('');
+  const [connected,    setConnected]    = useState(false);
+  const initialLoad    = useRef(true);
+
+  /* ── Carga inicial ────────────────────────────────── */
   useEffect(() => {
     async function init() {
       try {
@@ -52,28 +57,41 @@ export function useCocina() {
         setError(e.message);
       } finally {
         setLoading(false);
+        // Marcar que ya pasó la carga inicial
+        setTimeout(() => { initialLoad.current = false; }, 500);
       }
     }
     init();
   }, [token]);
 
-  // Socket: recibir pedidos nuevos del mesero
+  /* ── Socket.io ────────────────────────────────────── */
   useEffect(() => {
     const socket = connectSocket(token);
 
     socket.on(EVENTS.CONNECTED,    () => setConnected(true));
     socket.on(EVENTS.DISCONNECTED, () => setConnected(false));
 
-    // Nuevo pedido llega desde el mesero
     socket.on(EVENTS.PEDIDO_NUEVO, (pedido) => {
       setPedidos(prev => {
         const existe = prev.find(p => p.id_pedido === pedido.id_pedido);
         if (existe) return prev;
         return [pedido, ...prev];
       });
+
+      // Marcar como nuevo SOLO si ya pasó la carga inicial
+      if (!initialLoad.current) {
+        setNuevosIds(prev => new Set([...prev, pedido.id_pedido]));
+        // Quitar el flag de "nuevo" después de 5 segundos
+        setTimeout(() => {
+          setNuevosIds(prev => {
+            const next = new Set(prev);
+            next.delete(pedido.id_pedido);
+            return next;
+          });
+        }, 5000);
+      }
     });
 
-    // Actualización de estado reflejada (ej: otro dispositivo cocina)
     socket.on(EVENTS.PEDIDO_ESTADO, ({ id_pedido, estado }) => {
       if (estado === 'ENTREGADO') {
         setPedidos(prev => prev.filter(p => p.id_pedido !== id_pedido));
@@ -87,7 +105,7 @@ export function useCocina() {
     return () => disconnectSocket();
   }, [token]);
 
-  // Avanzar estado del pedido
+  /* ── Avanzar estado con rollback ──────────────────── */
   const avanzarEstado = useCallback(async (id_pedido) => {
     const pedido = pedidos.find(p => p.id_pedido === id_pedido);
     if (!pedido) return;
@@ -101,17 +119,18 @@ export function useCocina() {
 
     try {
       await cambiarEstado(token, id_pedido, nuevoEstado);
+      setError('');
     } catch (e) {
-      // Revertir si falla
+      // Rollback
       setPedidos(prev =>
         prev.map(p => p.id_pedido === id_pedido ? { ...p, estado: pedido.estado } : p)
       );
-      setError(e.message);
+      setError(`Error al cambiar pedido #${id_pedido}: ${e.message}`);
+      setTimeout(() => setError(''), 5000);
     }
   }, [pedidos, token]);
 
-  // Ordenar: PENDIENTE primero, luego EN_PROCESO, luego por antigüedad
-  const ORDEN = { PENDIENTE: 0, EN_PROCESO: 1, LISTO: 2 };
+  /* ── Pedidos ordenados ────────────────────────────── */
   const pedidosOrdenados = [...pedidos].sort((a, b) => {
     const diff = (ORDEN[a.estado] ?? 9) - (ORDEN[b.estado] ?? 9);
     if (diff !== 0) return diff;
@@ -126,6 +145,7 @@ export function useCocina() {
 
   return {
     pedidos: pedidosOrdenados,
+    nuevosIds,
     contadores, avanzarEstado,
     loading, error, connected,
   };

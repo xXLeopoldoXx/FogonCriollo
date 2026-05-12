@@ -1,25 +1,39 @@
-// ============================================================
 // El Fogón Criollo – MeseroPage
 // Panel completo del mesero — solo composición
-// ============================================================
 
-import { useAuth }         from '../context/AuthContext';
-import { useMesero }       from '../hooks/useMesero';
-import { MesaGrid }        from '../components/mesero/MesaGrid';
-import { MenuProductos }   from '../components/mesero/MenuProductos';
-import { Carrito }         from '../components/mesero/Carrito';
-import { PedidosActivos }  from '../components/mesero/PedidosActivos';
-import styles              from './MeseroPage.module.css';
+import { useAuth }        from '../context/AuthContext';
+import { useMesero }      from '../hooks/useMesero';
+import { MesaGrid }       from '../components/mesero/MesaGrid';
+import { MenuProductos }  from '../components/mesero/MenuProductos';
+import { Carrito }        from '../components/mesero/Carrito';
+import { PedidosActivos } from '../components/mesero/PedidosActivos';
+import styles             from './MeseroPage.module.css';
+
+/* ── Toast individual ─────────────────────────────────── */
+function Toast({ toast }) {
+  const cls = {
+    success: styles.toastSuccess,
+    error:   styles.toastError,
+    warning: styles.toastWarning,
+  }[toast.type] ?? styles.toastSuccess;
+
+  return (
+    <div className={`${styles.toast} ${cls}`} role="status" aria-live="polite">
+      {toast.message}
+    </div>
+  );
+}
 
 export function MeseroPage() {
   const { user, signOut } = useAuth();
   const {
     mesasPorPiso, mesaActiva, setMesaActiva,
     productosPorCategoria,
-    carrito, agregarProducto, quitarProducto, eliminarProducto, total,
+    carrito, agregarProducto, quitarProducto, eliminarProducto, cambiarNota, total,
     pedidos,
     enviarPedido, enviando,
-    loading, error, exito, connected,
+    ultimoPedidoId,
+    loading, toasts, connected,
   } = useMesero();
 
   if (loading) {
@@ -34,7 +48,7 @@ export function MeseroPage() {
   return (
     <div className={styles.root}>
 
-      {/* Topbar */}
+      {/* ── Topbar ────────────────────────────────── */}
       <header className={styles.topbar}>
         <div className={styles.topLeft}>
           <span className={styles.logo}>🔥</span>
@@ -50,11 +64,12 @@ export function MeseroPage() {
         </div>
       </header>
 
-      {/* Notificaciones */}
-      {exito && <div className={styles.toast} role="status">{exito}</div>}
-      {error && <div className={styles.toastError} role="alert">{error}</div>}
+      {/* ── Toast stack ───────────────────────────── */}
+      <div className={styles.toastStack} aria-live="polite">
+        {toasts.map(t => <Toast key={t.id} toast={t} />)}
+      </div>
 
-      {/* Layout principal */}
+      {/* ── Layout principal ──────────────────────── */}
       <main className={styles.main}>
 
         {/* Columna izquierda: mesas + pedidos activos */}
@@ -70,7 +85,7 @@ export function MeseroPage() {
 
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
-              Mis pedidos activos
+              Pedidos activos
               {pedidos.filter(p => p.estado !== 'ENTREGADO').length > 0 && (
                 <span className={styles.badge}>
                   {pedidos.filter(p => p.estado !== 'ENTREGADO').length}
@@ -102,6 +117,8 @@ export function MeseroPage() {
             onEliminar={eliminarProducto}
             onEnviar={enviarPedido}
             enviando={enviando}
+            onNotaChange={cambiarNota}
+            ultimoPedidoId={ultimoPedidoId}
           />
         </aside>
 

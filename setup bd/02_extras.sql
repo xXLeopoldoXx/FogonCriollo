@@ -44,6 +44,8 @@ CREATE INDEX IF NOT EXISTS idx_auditoria_pedido    ON public.auditoria_pedido (i
 CREATE INDEX IF NOT EXISTS idx_log_username        ON public.log_sistema (username, fecha_hora DESC);
 CREATE INDEX IF NOT EXISTS idx_log_accion          ON public.log_sistema (accion, fecha_hora DESC);
 
+ALTER TABLE public.producto ADD COLUMN IF NOT EXISTS imagen_url TEXT;
+ALTER TABLE public.detalle_pedido ADD COLUMN IF NOT EXISTS nota TEXT;
 -- Función: crear pedido atómico
 CREATE OR REPLACE FUNCTION public.fn_crear_pedido(
     p_id_mesa   INTEGER,
@@ -66,8 +68,14 @@ BEGIN
         IF v_precio IS NULL THEN
             RAISE EXCEPTION 'Producto % no disponible', v_item->>'id_producto';
         END IF;
-        INSERT INTO public.detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario)
-        VALUES (v_id_pedido, (v_item->>'id_producto')::INTEGER, (v_item->>'cantidad')::INTEGER, v_precio);
+        INSERT INTO public.detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario, nota)
+        VALUES (
+            v_id_pedido,
+            (v_item->>'id_producto')::INTEGER,
+            (v_item->>'cantidad')::INTEGER,
+            v_precio,
+            NULLIF(TRIM(v_item->>'nota'), '')
+        );
     END LOOP;
     RETURN v_id_pedido;
 END; $$;

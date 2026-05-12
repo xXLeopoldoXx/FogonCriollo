@@ -35,6 +35,10 @@ export function MenuProductos({ productosPorCategoria, carrito, onAgregar, onQui
           const cant = cantidadEnCarrito(prod.id_producto);
           return (
             <div key={prod.id_producto} className={`${styles.card} ${cant > 0 ? styles.inCart : ''}`}>
+              <div className={styles.imageWrap}>
+                <img src={prod.imagen_url} alt={prod.nombre} loading="lazy" />
+                {cant > 0 && <span className={styles.imageBadge}>{cant}</span>}
+              </div>
               <div className={styles.cardInfo}>
                 <span className={styles.prodNombre}>{prod.nombre}</span>
                 <span className={styles.prodPrecio}>S/ {Number(prod.precio).toFixed(2)}</span>

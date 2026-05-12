@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS public.producto (
     nombre       VARCHAR(150)  NOT NULL,
     precio       NUMERIC(8,2)  NOT NULL CHECK (precio >= 0),
     disponible   BOOLEAN       NOT NULL DEFAULT TRUE,
+    imagen_url   TEXT,
     id_categoria INTEGER       NOT NULL,
     CONSTRAINT producto_pkey PRIMARY KEY (id_producto)
 );
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS public.detalle_pedido (
     id_producto     INTEGER      NOT NULL,
     cantidad        INTEGER      NOT NULL CHECK (cantidad > 0),
     precio_unitario NUMERIC(8,2) NOT NULL CHECK (precio_unitario >= 0),
+    nota            TEXT,
     CONSTRAINT detalle_pedido_pkey PRIMARY KEY (id_detalle)
 );
 

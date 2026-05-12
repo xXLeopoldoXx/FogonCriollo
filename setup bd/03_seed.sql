@@ -12,22 +12,22 @@ INSERT INTO categoria (nombre, descripcion) VALUES
 ON CONFLICT DO NOTHING;
 
 -- Productos (usa los IDs que genere el serial de categorías)
-INSERT INTO producto (nombre, precio, disponible, id_categoria)
-SELECT nombre, precio, true, c.id_categoria FROM (VALUES
-  ('Pollo entero a la brasa',  45.00, 'Pollos'),
-  ('Medio pollo a la brasa',   24.00, 'Pollos'),
-  ('Cuarto de pollo',          13.00, 'Pollos'),
-  ('Pollo a la leña especial', 28.00, 'Pollos'),
-  ('Inca Kola 500ml',           4.00, 'Bebidas'),
-  ('Coca Cola 500ml',           4.00, 'Bebidas'),
-  ('Chicha morada 1L',          8.00, 'Bebidas'),
-  ('Agua mineral',              3.00, 'Bebidas'),
-  ('Papas fritas grandes',      8.00, 'Guarniciones'),
-  ('Ensalada criolla',          5.00, 'Guarniciones'),
-  ('Yucas fritas',              7.00, 'Guarniciones'),
-  ('Suspiro limeño',            8.00, 'Postres'),
-  ('Mazamorra morada',          6.00, 'Postres')
-) AS v(nombre, precio, cat_nombre)
+INSERT INTO producto (nombre, precio, disponible, imagen_url, id_categoria)
+SELECT v.nombre, v.precio, true, imagen_url, c.id_categoria FROM (VALUES
+  ('Pollo entero a la brasa',  45.00, 'Pollos', 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?auto=format&fit=crop&w=640&q=80'),
+  ('Medio pollo a la brasa',   24.00, 'Pollos', 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=640&q=80'),
+  ('Cuarto de pollo',          13.00, 'Pollos', 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=640&q=80'),
+  ('Pollo a la leña especial', 28.00, 'Pollos', 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=640&q=80'),
+  ('Inca Kola 500ml',           4.00, 'Bebidas', 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=640&q=80'),
+  ('Coca Cola 500ml',           4.00, 'Bebidas', 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=640&q=80'),
+  ('Chicha morada 1L',          8.00, 'Bebidas', 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=640&q=80'),
+  ('Agua mineral',              3.00, 'Bebidas', 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=640&q=80'),
+  ('Papas fritas grandes',      8.00, 'Guarniciones', 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=640&q=80'),
+  ('Ensalada criolla',          5.00, 'Guarniciones', 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=640&q=80'),
+  ('Yucas fritas',              7.00, 'Guarniciones', 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=640&q=80'),
+  ('Suspiro limeño',            8.00, 'Postres', 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=640&q=80'),
+  ('Mazamorra morada',          6.00, 'Postres', 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=640&q=80')
+) AS v(nombre, precio, cat_nombre, imagen_url)
 JOIN categoria c ON c.nombre = v.cat_nombre
 ON CONFLICT DO NOTHING;
 

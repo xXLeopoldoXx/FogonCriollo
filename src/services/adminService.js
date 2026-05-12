@@ -9,6 +9,16 @@ function authHeaders(token) {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
+async function handleJson(res, fallback) {
+  if (res.ok) return res.status === 204 ? null : res.json();
+  let message = fallback;
+  try {
+    const data = await res.json();
+    message = data.message ?? message;
+  } catch {}
+  throw new Error(message);
+}
+
 /** GET /api/admin/resumen-hoy → usa v_resumen_hoy */
 export async function getResumenHoy(token) {
   const res = await fetch(`${API_BASE}/admin/resumen-hoy`, { headers: authHeaders(token) });
@@ -51,4 +61,44 @@ export async function getVentasPorHora(token) {
   });
   if (!res.ok) throw new Error('Error al obtener ventas por hora');
   return res.json();
+}
+
+export async function getCategorias(token) {
+  const res = await fetch(`${API_BASE}/admin/categorias`, {
+    headers: authHeaders(token),
+  });
+  return handleJson(res, 'Error al obtener categorias');
+}
+
+export async function getAdminProductos(token) {
+  const res = await fetch(`${API_BASE}/admin/productos`, {
+    headers: authHeaders(token),
+  });
+  return handleJson(res, 'Error al obtener productos');
+}
+
+export async function crearAdminProducto(token, producto) {
+  const res = await fetch(`${API_BASE}/admin/productos`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(producto),
+  });
+  return handleJson(res, 'Error al crear producto');
+}
+
+export async function actualizarAdminProducto(token, id, producto) {
+  const res = await fetch(`${API_BASE}/admin/productos/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify(producto),
+  });
+  return handleJson(res, 'Error al actualizar producto');
+}
+
+export async function eliminarAdminProducto(token, id) {
+  const res = await fetch(`${API_BASE}/admin/productos/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
+  return handleJson(res, 'Error al eliminar producto');
 }

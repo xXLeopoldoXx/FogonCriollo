@@ -1,17 +1,15 @@
-// ============================================================
-// El Fogón Criollo – App.jsx
-// Router principal + providers globales
-// ============================================================
+//router de llamada a las páginas, con protección de rutas según rol de usuario
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { LoginPage }  from './pages/LoginPage';
-import { MeseroPage } from './pages/MeseroPage';
-import { CocinaPage } from './pages/CocinaPage';
-import { AdminPage }  from './pages/AdminPage';
+import { LoginPage }   from './pages/LoginPage';
+import { MeseroPage }  from './pages/MeseroPage';
+import { CocinaPage }  from './pages/CocinaPage';
+import { AdminPage }   from './pages/AdminPage';
+import { ClientePage } from './pages/ClientePage';
 import './styles/global.css';
 
-/* Rutas protegidas por autenticación */
+// Rutas protegidas por autenticación y rol 
 function PrivateRoute({ children, roles }) {
   const { isAuthenticated, user } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -19,7 +17,6 @@ function PrivateRoute({ children, roles }) {
   return children;
 }
 
-/* Placeholders de páginas — se irán construyendo */
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: 40, color: 'var(--text-cream)', fontFamily: 'var(--font-body)' }}>
     <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--brand-glow)' }}>{title}</h2>
@@ -32,6 +29,10 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Pública – vista del cliente (sin login) */}
+          <Route path="/cliente" element={<ClientePage />} />
+          <Route path="/cliente/:idPedido" element={<ClientePage />} />
+
           <Route path="/login" element={<LoginPage />} />
 
           <Route path="/mesero" element={
@@ -52,8 +53,8 @@ export default function App() {
             </PrivateRoute>
           } />
 
-          {/* Redirige raíz a login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/cliente" replace />} />
+          <Route path="*" element={<Navigate to="/cliente" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

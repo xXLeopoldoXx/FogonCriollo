@@ -8,14 +8,14 @@ const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 /**
  * Realiza el login contra el backend.
  * POST /api/auth/login
- * Body: { username, password, rol }
+ * Body: { username, password }
  * Returns: { token, usuario: { id, username, rol, nombre } }
  */
-export async function login({ username, password, rol }) {
+export async function login({ username, password }) {
   const res = await fetch(`${API_BASE}/auth/login`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ username, password, rol }),
+    body:    JSON.stringify({ username, password }),
   });
 
   if (!res.ok) {

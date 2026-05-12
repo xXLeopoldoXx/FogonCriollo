@@ -36,19 +36,59 @@
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 14px;
+  padding: 10px;
   display: flex; flex-direction: column; gap: 12px;
   transition: all var(--t-base);
+  overflow: hidden;
 }
 
-.card:hover { border-color: var(--border-active); }
+.card:hover {
+  border-color: rgba(52,140,132,0.55);
+  transform: translateY(-2px);
+}
 
 .card.inCart {
   border-color: rgba(200,90,26,0.4);
   background: rgba(200,90,26,0.06);
 }
 
-.cardInfo { display: flex; flex-direction: column; gap: 4px; }
+.imageWrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+}
+
+.imageWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--t-slow);
+}
+
+.card:hover .imageWrap img {
+  transform: scale(1.05);
+}
+
+.imageBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #348c84;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.cardInfo { display: flex; flex-direction: column; gap: 4px; min-height: 54px; }
 
 .prodNombre {
   font-size: 13px; font-weight: 500;

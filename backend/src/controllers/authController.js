@@ -7,9 +7,9 @@ const jwt    = require('jsonwebtoken');
 const { query } = require('../db/pool');
 
 async function login(req, res) {
-  const { username, password, rol } = req.body;
+  const { username, password } = req.body;
 
-  if (!username || !password || !rol) {
+  if (!username || !password) {
     return res.status(400).json({ message: 'Faltan campos requeridos' });
   }
 
@@ -30,14 +30,9 @@ async function login(req, res) {
       return res.status(401).json({ message: 'Credenciales incorrectas' });
     }
 
-    // Validar rol
-    console.log('ROL BD:', JSON.stringify(user.rol), 'ROL ENVIADO:', JSON.stringify(rol));
-    if (false) {
-      return res.status(401).json({ message: 'Usuario, contraseña o rol incorrecto.' });
-    }
-
     // Validar contraseña
     const ok = await bcrypt.compare(password, user.password);
+
     if (!ok) {
       return res.status(401).json({ message: 'Credenciales incorrectas' });
     }
@@ -46,7 +41,7 @@ async function login(req, res) {
     await query(
       `INSERT INTO log_sistema (username, accion, detalle, exitoso)
        VALUES ($1, 'LOGIN', $2, true)`,
-      [username, `Login exitoso desde rol ${rol}`]
+      [username, `Login exitoso como ${user.rol}`]
     ).catch(() => {}); // no bloquear si falla el log
 
     // Generar JWT

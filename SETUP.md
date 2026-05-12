@@ -31,6 +31,12 @@ npm run dev
 
 Verifica: `http://localhost:3000/health` → debe decir `"status":"ok"`
 
+También puedes iniciar la API desde la raíz con:
+
+```bash
+npm run dev:backend
+```
+
 ---
 
 ## 3. Frontend
@@ -44,6 +50,8 @@ npm run dev
 
 Abre: `http://localhost:5173`
 
+El frontend y el backend se ejecutan en terminales separadas. Si solo corres `npm run dev` en la raíz, se abre la interfaz React, pero el login no funcionará si la API en `localhost:3000` o PostgreSQL no están activos.
+
 ---
 
 ## 4. Credenciales
@@ -54,6 +62,8 @@ Abre: `http://localhost:5173`
 | mesero2  | mesero123   | Mesero   |
 | cocina1  | cocina123   | Cocina   |
 | admin    | admin123    | Admin    |
+
+La pantalla de login no pide rol: valida usuario y contraseña, y el sistema entra automáticamente al módulo que corresponde al rol guardado en la base de datos.
 
 ---
 

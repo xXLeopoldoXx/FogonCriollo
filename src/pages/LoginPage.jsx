@@ -4,7 +4,6 @@
 // ============================================================
 
 import { useState, useEffect, useRef } from 'react';
-import { RoleSelector } from '../components/auth/RoleSelector';
 import { InputField }   from '../components/ui/InputField';
 import { Button }       from '../components/ui/Button';
 import { useLogin }     from '../hooks/useLogin';
@@ -30,7 +29,6 @@ function IconLock(props) {
 }
 
 export function LoginPage() {
-  const [rol,      setRol]      = useState('ADMIN');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const canvasRef = useRef(null);
@@ -93,7 +91,7 @@ export function LoginPage() {
 
   function onSubmit(e) {
     e.preventDefault();
-    handleLogin({ username, password, rol });
+    handleLogin({ username, password });
   }
 
   return (
@@ -114,13 +112,7 @@ export function LoginPage() {
         <div className={styles.divider} />
 
         <p className={styles.welcome}>Bienvenido de vuelta</p>
-        <p className={styles.welcomeSub}>Selecciona tu rol e ingresa tus credenciales</p>
-
-        {/* Selector de rol */}
-        <div className={styles.fieldGroup}>
-          <span className={styles.fieldLabel}>Tu rol</span>
-          <RoleSelector value={rol} onChange={setRol} />
-        </div>
+        <p className={styles.welcomeSub}>Ingresa tus credenciales para continuar</p>
 
         {/* Usuario */}
         <InputField

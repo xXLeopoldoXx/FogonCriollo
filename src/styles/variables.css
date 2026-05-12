@@ -1,53 +1,68 @@
-/* ============================================================
-   El Fogón Criollo – Design Tokens
-   Importar en index.css o App.jsx
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap');
 
 :root {
-  /* Brand */
+  /* ── Brand ───────────────────────────────────────── */
   --brand:        #C85A1A;
   --brand-deep:   #8B3A0F;
   --brand-glow:   #E8834A;
   --ember:        #F2A74B;
 
-  /* Backgrounds */
+  /* ── Backgrounds ─────────────────────────────────── */
   --bg-smoke:     #1A110A;
   --bg-ash:       #2C1F15;
   --bg-wood:      #3D2B1A;
   --bg-card:      rgba(45,28,16,0.95);
 
-  /* Text */
+  /* ── Text ────────────────────────────────────────── */
   --text-cream:   #F5EDD8;
   --text-dim:     #C9B99A;
   --text-muted:   rgba(201,185,154,0.4);
 
-  /* Borders */
+  /* ── Borders ─────────────────────────────────────── */
   --border-subtle:  rgba(200,90,26,0.2);
   --border-active:  rgba(200,90,26,0.5);
 
-  /* Semantic */
+  /* ── Semantic ────────────────────────────────────── */
   --success:  #4CAF50;
   --error:    #E05252;
   --warning:  #F2A74B;
+  --info:     #4A90E2;
 
-  /* Radius */
+  /* ── Status colors ───────────────────────────────── */
+  --status-pendiente-bg:  rgba(242,167,75,0.12);
+  --status-pendiente-fg:  #F2A74B;
+  --status-proceso-bg:    rgba(74,144,226,0.12);
+  --status-proceso-fg:    #4A90E2;
+  --status-listo-bg:      rgba(76,175,80,0.12);
+  --status-listo-fg:      #4CAF50;
+  --status-entregado-bg:  rgba(155,89,182,0.12);
+  --status-entregado-fg:  #CE93D8;
+
+  /* ── Radius ──────────────────────────────────────── */
   --radius-sm:  8px;
   --radius-md:  12px;
   --radius-lg:  20px;
+  --radius-xl:  28px;
 
-  /* Typography */
+  /* ── Typography ──────────────────────────────────── */
   --font-display: 'Playfair Display', serif;
   --font-body:    'DM Sans', sans-serif;
 
-  /* Shadows */
+  /* ── Shadows ─────────────────────────────────────── */
   --shadow-card:  0 0 80px rgba(200,90,26,0.12), 0 2px 4px rgba(0,0,0,0.6);
   --shadow-glow:  0 4px 20px rgba(200,90,26,0.35);
   --shadow-focus: 0 0 0 3px rgba(200,90,26,0.2);
+  --shadow-lift:  0 8px 32px rgba(0,0,0,0.4);
+  --shadow-green: 0 4px 20px rgba(76,175,80,0.3);
+  --shadow-blue:  0 4px 20px rgba(74,144,226,0.25);
 
-  /* Transitions */
+  /* ── Transitions ─────────────────────────────────── */
   --t-fast:   0.15s ease;
-  --t-base:   0.2s ease;
-  --t-slow:   0.35s cubic-bezier(0.16,1,0.3,1);
+  --t-base:   0.25s ease;
+  --t-slow:   0.4s cubic-bezier(0.16,1,0.3,1);
+
+  /* ── Easing functions ────────────────────────────── */
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-back:   cubic-bezier(0.36, 0, 0.66, -0.56);
 }

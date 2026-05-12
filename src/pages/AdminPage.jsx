@@ -14,8 +14,136 @@ import styles               from './AdminPage.module.css';
 const NAV = [
   { key: 'dashboard', label: 'Dashboard',  icon: '📊' },
   { key: 'reportes',  label: 'Reportes',   icon: '📈' },
+  { key: 'productos', label: 'Productos',  icon: '🍽️' },
   { key: 'auditoria', label: 'Auditoría',  icon: '🔍' },
 ];
+
+const EMPTY_PRODUCT = {
+  id_producto: null,
+  nombre: '',
+  precio: '',
+  id_categoria: '',
+  imagen_url: '',
+  disponible: true,
+};
+
+function ProductosAdmin({ productos, categorias, onSave, onDelete }) {
+  const [form, setForm] = useState(EMPTY_PRODUCT);
+  const editing = Boolean(form.id_producto);
+
+  function edit(producto) {
+    setForm({
+      id_producto: producto.id_producto,
+      nombre: producto.nombre ?? '',
+      precio: producto.precio ?? '',
+      id_categoria: producto.id_categoria ?? '',
+      imagen_url: producto.imagen_url ?? '',
+      disponible: producto.disponible !== false,
+    });
+  }
+
+  async function submit(e) {
+    e.preventDefault();
+    await onSave({
+      ...form,
+      precio: Number(form.precio),
+      id_categoria: Number(form.id_categoria),
+    });
+    setForm(EMPTY_PRODUCT);
+  }
+
+  return (
+    <div className={styles.productosGrid}>
+      <form className={styles.productForm} onSubmit={submit}>
+        <div className={styles.productPreview}>
+          {form.imagen_url ? (
+            <img src={form.imagen_url} alt={form.nombre || 'Vista previa'} />
+          ) : (
+            <span>Imagen</span>
+          )}
+        </div>
+
+        <div className={styles.productFields}>
+          <input
+            className={styles.productInput}
+            value={form.nombre}
+            onChange={e => setForm(v => ({ ...v, nombre: e.target.value }))}
+            placeholder="Nombre del producto"
+            required
+          />
+          <input
+            className={styles.productInput}
+            value={form.precio}
+            onChange={e => setForm(v => ({ ...v, precio: e.target.value }))}
+            placeholder="Precio"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+          />
+          <select
+            className={styles.productInput}
+            value={form.id_categoria}
+            onChange={e => setForm(v => ({ ...v, id_categoria: e.target.value }))}
+            required
+          >
+            <option value="">Categoría</option>
+            {categorias.map(cat => (
+              <option key={cat.id_categoria} value={cat.id_categoria}>{cat.nombre}</option>
+            ))}
+          </select>
+          <input
+            className={styles.productInput}
+            value={form.imagen_url}
+            onChange={e => setForm(v => ({ ...v, imagen_url: e.target.value }))}
+            placeholder="URL de imagen"
+          />
+          <label className={styles.productCheck}>
+            <input
+              type="checkbox"
+              checked={form.disponible}
+              onChange={e => setForm(v => ({ ...v, disponible: e.target.checked }))}
+            />
+            Disponible en carta
+          </label>
+        </div>
+
+        <div className={styles.productActions}>
+          <button className={styles.filtroBtn} type="submit">
+            {editing ? 'Guardar cambios' : 'Crear producto'}
+          </button>
+          {editing && (
+            <button className={styles.secondaryBtn} type="button" onClick={() => setForm(EMPTY_PRODUCT)}>
+              Cancelar
+            </button>
+          )}
+        </div>
+      </form>
+
+      <div className={styles.productList}>
+        {productos.map(producto => (
+          <article key={producto.id_producto} className={styles.productRow}>
+            <img src={producto.imagen_url} alt={producto.nombre} loading="lazy" />
+            <div className={styles.productInfo}>
+              <strong>{producto.nombre}</strong>
+              <span>{producto.categoria} · S/ {Number(producto.precio).toFixed(2)}</span>
+              <small>{producto.disponible ? 'Disponible' : 'Oculto en carta'}</small>
+            </div>
+            <div className={styles.productRowActions}>
+              <button onClick={() => edit(producto)}>Editar</button>
+              <button onClick={() => onSave({ ...producto, disponible: !producto.disponible })}>
+                {producto.disponible ? 'Ocultar' : 'Activar'}
+              </button>
+              <button className={styles.dangerBtn} onClick={() => onDelete(producto.id_producto)}>
+                Eliminar
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function AdminPage() {
   const { user, signOut }  = useAuth();
@@ -24,6 +152,8 @@ export function AdminPage() {
     loading, error, connected,
     seccion, setSeccion,
     refrescarVentas,
+    productos, categorias,
+    guardarProducto, borrarProducto,
   } = useAdmin();
 
   const [desde, setDesde] = useState(() => {
@@ -226,6 +356,16 @@ export function AdminPage() {
             </div>
 
           </div>
+        )}
+
+        {/* ─── PRODUCTOS ─── */}
+        {seccion === 'productos' && (
+          <ProductosAdmin
+            productos={productos}
+            categorias={categorias}
+            onSave={guardarProducto}
+            onDelete={borrarProducto}
+          />
         )}
 
         {/* ─── AUDITORÍA ─── */}

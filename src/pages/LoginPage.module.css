@@ -56,7 +56,7 @@
   font-family: var(--font-display);
   font-size: 28px; font-weight: 900;
   color: var(--text-cream);
-  letter-spacing: -0.5px; line-height: 1;
+  letter-spacing: 0; line-height: 1;
 }
 
 .accent    { color: var(--brand-glow); }

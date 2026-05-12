@@ -1,17 +1,15 @@
-// ============================================================
 // El Fogón Criollo – CocinaPage
 // Panel de cocina — vista de pedidos en tiempo real
-// ============================================================
 
-import { useAuth }           from '../context/AuthContext';
-import { useCocina }         from '../hooks/useCocina';
-import { TarjetaPedido }     from '../components/cocina/TarjetaPedido';
-import { ContadorEstados }   from '../components/cocina/ContadorEstados';
-import styles                from './CocinaPage.module.css';
+import { useAuth }         from '../context/AuthContext';
+import { useCocina }       from '../hooks/useCocina';
+import { TarjetaPedido }   from '../components/cocina/TarjetaPedido';
+import { ContadorEstados } from '../components/cocina/ContadorEstados';
+import styles              from './CocinaPage.module.css';
 
 export function CocinaPage() {
   const { user, signOut } = useAuth();
-  const { pedidos, contadores, avanzarEstado, loading, error, connected } = useCocina();
+  const { pedidos, nuevosIds, contadores, avanzarEstado, loading, error, connected } = useCocina();
 
   if (loading) {
     return (
@@ -22,10 +20,12 @@ export function CocinaPage() {
     );
   }
 
+  const porEstado = (estado) => pedidos.filter(p => p.estado === estado);
+
   return (
     <div className={styles.root}>
 
-      {/* Topbar */}
+      {/* ── Topbar ────────────────────────────────── */}
       <header className={styles.topbar}>
         <div className={styles.topLeft}>
           <span className={styles.logo}>🔥</span>
@@ -44,61 +44,76 @@ export function CocinaPage() {
         </div>
       </header>
 
-      {error && <div className={styles.errorBanner} role="alert">{error}</div>}
+      {error && (
+        <div className={styles.errorBanner} role="alert">{error}</div>
+      )}
 
-      {/* Columnas Kanban */}
+      {/* ── Kanban ────────────────────────────────── */}
       <main className={styles.kanban}>
 
-        {/* Columna PENDIENTE */}
+        {/* PENDIENTE */}
         <div className={styles.col}>
           <div className={`${styles.colHeader} ${styles.colPendiente}`}>
             <span className={styles.colTitle}>Nuevos</span>
-            <span className={styles.colCount}>{contadores.pendiente}</span>
+            <span className={`${styles.colCount} ${contadores.pendiente > 0 ? styles.colCountActive : ''}`}>
+              {contadores.pendiente}
+            </span>
           </div>
           <div className={styles.colCards}>
-            {pedidos.filter(p => p.estado === 'PENDIENTE').length === 0
-              ? <p className={styles.colEmpty}>Sin pedidos nuevos</p>
-              : pedidos
-                  .filter(p => p.estado === 'PENDIENTE')
-                  .map(p => (
-                    <TarjetaPedido key={p.id_pedido} pedido={p} onAvanzar={avanzarEstado} />
-                  ))
+            {porEstado('PENDIENTE').length === 0
+              ? <p className={styles.colEmpty}>Sin pedidos nuevos 🍃</p>
+              : porEstado('PENDIENTE').map(p => (
+                  <TarjetaPedido
+                    key={p.id_pedido}
+                    pedido={p}
+                    onAvanzar={avanzarEstado}
+                    isNuevo={nuevosIds.has(p.id_pedido)}
+                  />
+                ))
             }
           </div>
         </div>
 
-        {/* Columna EN_PROCESO */}
+        {/* EN_PROCESO */}
         <div className={styles.col}>
           <div className={`${styles.colHeader} ${styles.colProceso}`}>
             <span className={styles.colTitle}>En preparación</span>
             <span className={styles.colCount}>{contadores.en_proceso}</span>
           </div>
           <div className={styles.colCards}>
-            {pedidos.filter(p => p.estado === 'EN_PROCESO').length === 0
-              ? <p className={styles.colEmpty}>Nada en preparación</p>
-              : pedidos
-                  .filter(p => p.estado === 'EN_PROCESO')
-                  .map(p => (
-                    <TarjetaPedido key={p.id_pedido} pedido={p} onAvanzar={avanzarEstado} />
-                  ))
+            {porEstado('EN_PROCESO').length === 0
+              ? <p className={styles.colEmpty}>Nada en preparación 🍳</p>
+              : porEstado('EN_PROCESO').map(p => (
+                  <TarjetaPedido
+                    key={p.id_pedido}
+                    pedido={p}
+                    onAvanzar={avanzarEstado}
+                    isNuevo={false}
+                  />
+                ))
             }
           </div>
         </div>
 
-        {/* Columna LISTO */}
+        {/* LISTO */}
         <div className={styles.col}>
           <div className={`${styles.colHeader} ${styles.colListo}`}>
             <span className={styles.colTitle}>Listos para entregar</span>
-            <span className={styles.colCount}>{contadores.listo}</span>
+            <span className={`${styles.colCount} ${contadores.listo > 0 ? styles.colCountListo : ''}`}>
+              {contadores.listo}
+            </span>
           </div>
           <div className={styles.colCards}>
-            {pedidos.filter(p => p.estado === 'LISTO').length === 0
-              ? <p className={styles.colEmpty}>Sin pedidos listos</p>
-              : pedidos
-                  .filter(p => p.estado === 'LISTO')
-                  .map(p => (
-                    <TarjetaPedido key={p.id_pedido} pedido={p} onAvanzar={avanzarEstado} />
-                  ))
+            {porEstado('LISTO').length === 0
+              ? <p className={styles.colEmpty}>Sin pedidos listos 🔔</p>
+              : porEstado('LISTO').map(p => (
+                  <TarjetaPedido
+                    key={p.id_pedido}
+                    pedido={p}
+                    onAvanzar={avanzarEstado}
+                    isNuevo={false}
+                  />
+                ))
             }
           </div>
         </div>

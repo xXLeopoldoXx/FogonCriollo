@@ -8,6 +8,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   getResumenHoy, getTopProductos,
   getReporteVentas, getAuditoria, getVentasPorHora,
+  getAdminProductos, getCategorias,
+  crearAdminProducto, actualizarAdminProducto, eliminarAdminProducto,
 } from '../services/adminService';
 import { connectSocket, disconnectSocket, EVENTS } from '../services/socketService';
 
@@ -28,6 +30,8 @@ export function useAdmin() {
   const [ventasDiarias, setVentasDiarias] = useState([]);
   const [ventasPorHora, setVentasPorHora] = useState([]);
   const [auditoria,     setAuditoria]     = useState([]);
+  const [productos,     setProductos]     = useState([]);
+  const [categorias,    setCategorias]    = useState([]);
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState('');
   const [connected,     setConnected]     = useState(false);
@@ -37,18 +41,22 @@ export function useAdmin() {
   useEffect(() => {
     async function init() {
       try {
-        const [res, top, ventas, horas, aud] = await Promise.all([
+        const [res, top, ventas, horas, aud, prods, cats] = await Promise.all([
           getResumenHoy(token),
           getTopProductos(token, 8),
           getReporteVentas(token, inicioMes(), hoy()),
           getVentasPorHora(token),
           getAuditoria(token, 50),
+          getAdminProductos(token),
+          getCategorias(token),
         ]);
         setResumen(res);
         setTopProductos(top);
         setVentasDiarias(ventas);
         setVentasPorHora(horas);
         setAuditoria(aud);
+        setProductos(prods);
+        setCategorias(cats);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -88,10 +96,43 @@ export function useAdmin() {
     }
   }, [token]);
 
+  const guardarProducto = useCallback(async (producto) => {
+    try {
+      setError('');
+      const saved = producto.id_producto
+        ? await actualizarAdminProducto(token, producto.id_producto, producto)
+        : await crearAdminProducto(token, producto);
+
+      setProductos(prev => {
+        const existe = prev.some(p => p.id_producto === saved.id_producto);
+        return existe
+          ? prev.map(p => p.id_producto === saved.id_producto ? { ...p, ...saved } : p)
+          : [...prev, saved];
+      });
+      return saved;
+    } catch (e) {
+      setError(e.message);
+      throw e;
+    }
+  }, [token]);
+
+  const borrarProducto = useCallback(async (id) => {
+    try {
+      setError('');
+      await eliminarAdminProducto(token, id);
+      setProductos(prev => prev.filter(p => p.id_producto !== id));
+    } catch (e) {
+      setError(e.message);
+      throw e;
+    }
+  }, [token]);
+
   return {
-    resumen, topProductos, ventasDiarias, ventasPorHora, auditoria,
+   resumen, topProductos, ventasDiarias, ventasPorHora, auditoria,
+    productos, categorias,
     loading, error, connected,
     seccion, setSeccion,
     refrescarVentas,
+    guardarProducto, borrarProducto,
   };
 }
