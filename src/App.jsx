@@ -2,11 +2,11 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { LoginPage }   from './pages/LoginPage';
-import { MeseroPage }  from './pages/MeseroPage';
-import { CocinaPage }  from './pages/CocinaPage';
-import { AdminPage }   from './pages/AdminPage';
-import { ClientePage } from './pages/ClientePage';
+import { LoginPage }   from './views/pages/LoginPage';
+import { MeseroPage }  from './views/pages/MeseroPage';
+import { CocinaPage }  from './views/pages/CocinaPage';
+import { AdminPage }   from './views/pages/AdminPage';
+import { ClientePage } from './views/pages/ClientePage';
 import './styles/global.css';
 
 // Rutas protegidas por autenticación y rol 

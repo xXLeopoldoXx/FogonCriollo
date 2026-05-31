@@ -4,7 +4,7 @@
 // ============================================================
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { getStoredSession, logout as apiLogout } from '../services/authService';
+import { getStoredSession, logout as apiLogout } from '../models/authModel';
 
 const AuthContext = createContext(null);
 

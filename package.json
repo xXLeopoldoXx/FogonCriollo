@@ -4,16 +4,17 @@
   "description": "Sistema de gestión de pedidos – El Fogón Criollo S.A.C.",
   "type": "module",
   "scripts": {
-    "dev":     "vite",
+    "dev": "vite",
     "dev:frontend": "vite",
-    "dev:backend":  "npm --prefix backend run dev",
+    "dev:backend": "npm --prefix backend run dev",
     "start:backend": "npm --prefix backend start",
-    "build":   "vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "react":        "^18.2.0",
-    "react-dom":    "^18.2.0",
+    "lucide-react": "^1.17.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",
     "socket.io-client": "^4.7.4"
   },
