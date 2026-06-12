@@ -1,0 +1,1 @@
+export { NotifPanel } from './AdminComponents';

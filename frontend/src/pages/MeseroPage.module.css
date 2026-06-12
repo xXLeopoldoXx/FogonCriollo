@@ -1,0 +1,299 @@
+/* MeseroPage.module.css */
+
+.root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(200,90,26,0.12) 0%, transparent 60%),
+    var(--carbon-950);
+}
+
+/* ── Loading ──────────────────────────────────────────── */
+.loadingScreen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.loadText {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+
+/* ── Topbar ───────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(10,6,4,0.7);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  gap: 16px;
+}
+
+.topLeft  { display: flex; align-items: center; gap: 14px; }
+.topRight { display: flex; align-items: center; gap: 10px; }
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(200,90,26,0.08);
+  cursor: default;
+}
+.logoFlame {
+  color: var(--brand-400);
+  filter: drop-shadow(0 0 8px rgba(232,131,74,0.7));
+}
+.brandName {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+.brandSub {
+  font-size: 10px;
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  display: block;
+}
+
+.userPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.04);
+}
+.userAvatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand), var(--wood-500));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  color: white;
+}
+.userName {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.connPill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 500;
+}
+.connOnline {
+  background: rgba(76,175,80,0.12);
+  border: 1px solid rgba(76,175,80,0.3);
+  color: #4CAF50;
+  animation: onlinePulse 3s ease infinite;
+}
+.connOffline {
+  background: rgba(239,83,80,0.1);
+  border: 1px solid rgba(239,83,80,0.3);
+  color: var(--error);
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  transition: all var(--transition-fast);
+}
+.logoutBtn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.04);
+}
+
+/* ── Stepper ──────────────────────────────────────────── */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(10,6,4,0.4);
+  position: sticky;
+  top: 53px;
+  z-index: calc(var(--z-sticky) - 1);
+}
+
+.backBtn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+.backBtn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.04);
+}
+
+.stepperSteps {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 0;
+}
+
+.stepperItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stepDot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+  transition: all var(--transition-base);
+}
+.stepDone {
+  background: rgba(76,175,80,0.2);
+  border: 1px solid rgba(76,175,80,0.5);
+  color: #4CAF50;
+}
+.stepActive {
+  background: rgba(200,90,26,0.2);
+  border: 1.5px solid var(--brand);
+  color: var(--ember);
+  box-shadow: 0 0 12px rgba(200,90,26,0.3);
+}
+.stepPending {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+}
+
+.stepLabel {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast);
+}
+.stepLabelActive  { color: var(--ember); font-weight: 500; }
+.stepLabelPending { color: var(--text-muted); }
+
+.stepLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+  position: relative;
+  margin: 0 4px;
+  overflow: hidden;
+}
+.stepLineDone { background: rgba(76,175,80,0.25); }
+.stepLineFill {
+  position: absolute;
+  inset: 0;
+  background: rgba(76,175,80,0.5);
+  transform-origin: left;
+}
+
+.stepperMesa {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(200,90,26,0.12);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ember);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.stepperBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ── Layout principal ─────────────────────────────────── */
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 0;
+  align-items: start;
+  overflow: hidden;
+}
+
+.stepContent {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100dvh - 120px);
+}
+
+.stepPane {
+  width: 100%;
+  min-height: calc(100dvh - 120px);
+  overflow-y: auto;
+}
+
+.sidebar {
+  border-left: 1px solid var(--border-subtle);
+  height: calc(100dvh - 120px);
+  overflow-y: auto;
+  position: sticky;
+  top: 120px;
+  background: rgba(10,6,4,0.3);
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    display: none;
+  }
+  .stepper {
+    padding: 10px 16px;
+  }
+  .stepLabel {
+    display: none;
+  }
+}

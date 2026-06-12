@@ -1,0 +1,131 @@
+/* ============================================================
+   El Fogón Criollo — Design Tokens v2
+   Identidad: brasa, carbón, leña, calor andino peruano
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Identidad de marca ─────────────────────────────── */
+  --brand-50:   #FEF3EC;
+  --brand-100:  #FDDBC4;
+  --brand-200:  #FABF97;
+  --brand-400:  #E8834A;
+  --brand-500:  #C85A1A;
+  --brand-600:  #9E420E;
+  --brand-700:  #7A3009;
+  --brand-900:  #3D1505;
+  --brand:      var(--brand-500);
+  --ember:      #F2A74B;
+  --brand-glow: var(--brand-400);
+
+  /* ── Brasa (acento secundario cálido) ───────────────── */
+  --brasa-400:  #FF7043;
+  --brasa-500:  #E64A19;
+  --brasa-glow: rgba(232, 131, 74, 0.35);
+
+  /* ── Carbón (fondo oscuro) ──────────────────────────── */
+  --carbon-950: #0A0604;
+  --carbon-900: #110804;
+  --carbon-850: #1A0D06;
+  --carbon-800: #21110A;
+  --carbon-700: #2C1A0E;
+  --carbon-600: #3D2610;
+  --carbon-500: #4E3214;
+  --carbon-400: #6B4520;
+
+  /* ── Madera (superficies de tarjetas) ───────────────── */
+  --wood-900: #1F1208;
+  --wood-800: #2A190C;
+  --wood-700: #3D2410;
+  --wood-600: #5A3518;
+  --wood-500: #7B4A22;
+
+  /* ── Texto ──────────────────────────────────────────── */
+  --text-primary:   #F5EDD8;
+  --text-secondary: #C9B99A;
+  --text-tertiary:  #9B8B7A;
+  --text-muted:     rgba(201, 185, 154, 0.4);
+  --text-inverse:   #1A0D06;
+
+  /* ── Alias semánticos ───────────────────────────────── */
+  --bg-base:    var(--carbon-950);
+  --bg-surface: var(--wood-900);
+  --bg-card:    var(--wood-800);
+  --bg-elevated: var(--wood-700);
+
+  /* ── Bordes ─────────────────────────────────────────── */
+  --border-base:   rgba(200, 90, 26, 0.18);
+  --border-subtle: rgba(200, 90, 26, 0.12);
+  --border-strong: rgba(200, 90, 26, 0.45);
+  --border-glow:   rgba(242, 167, 75, 0.6);
+
+  /* ── Semánticos ─────────────────────────────────────── */
+  --success:     #4CAF50;
+  --success-dim: rgba(76, 175, 80, 0.15);
+  --error:       #EF5350;
+  --error-dim:   rgba(239, 83, 80, 0.12);
+  --warning:     #FF9800;
+  --warning-dim: rgba(255, 152, 0, 0.12);
+  --info:        #42A5F5;
+  --info-dim:    rgba(66, 165, 245, 0.12);
+
+  /* ── Tipografía ─────────────────────────────────────── */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'Inter', -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Escala tipográfica ─────────────────────────────── */
+  --text-xs:   0.75rem;    /* 12px */
+  --text-sm:   0.875rem;   /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg:   1.125rem;   /* 18px */
+  --text-xl:   1.25rem;    /* 20px */
+  --text-2xl:  1.5rem;     /* 24px */
+  --text-3xl:  1.875rem;   /* 30px */
+  --text-4xl:  2.25rem;    /* 36px */
+
+  /* ── Espaciado ──────────────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ── Radios ─────────────────────────────────────────── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 9999px;
+
+  /* ── Sombras ────────────────────────────────────────── */
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:    0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg:    0 8px 32px rgba(0,0,0,0.6);
+  --shadow-glow:  0 4px 20px rgba(200,90,26,0.35);
+  --shadow-focus: 0 0 0 3px rgba(200,90,26,0.3);
+  --shadow-card:  0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(242,167,75,0.06);
+  --shadow-ember: 0 0 24px rgba(242, 167, 75, 0.15), 0 8px 32px rgba(0,0,0,0.5);
+
+  /* ── Transiciones ───────────────────────────────────── */
+  --transition-fast:   150ms ease;
+  --transition-base:   250ms ease;
+  --transition-slow:   400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:       cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-expo:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-circ:  cubic-bezier(0.85, 0, 0.15, 1);
+
+  /* ── Z-index ────────────────────────────────────────── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-dropdown:100;
+  --z-sticky:  200;
+  --z-overlay: 300;
+  --z-modal:   400;
+  --z-toast:   500;
+}

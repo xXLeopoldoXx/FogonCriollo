@@ -1,143 +1,191 @@
 // ============================================================
-// El Fogón Criollo – server.js
-// Punto de entrada: Express + Socket.io + PostgreSQL
+//  El Fogón Criollo — server.js v2
+//  Express + Socket.io + Helmet + Winston + Redis sessions
 // ============================================================
 
 require('dotenv').config();
-
-const express    = require('express');
-const http       = require('http');
-const { Server } = require('socket.io');
-const cors       = require('cors');
-const jwt        = require('jsonwebtoken');
-const { pool }   = require('./db/pool');
-const routes     = require('./routes');
+const express     = require('express');
+const http        = require('http');
+const { Server }  = require('socket.io');
+const cors        = require('cors');
+const helmet      = require('helmet');
+const compression = require('compression');
+const morgan      = require('morgan');
+const jwt         = require('jsonwebtoken');
+const path        = require('path');
+const { pool }    = require('./db/pool');
+const { redis }   = require('./db/redis');
+const routes      = require('./routes');
+const logger      = require('./utils/logger');
+const { setupSocketHandlers } = require('./services/socketService');
 
 const app    = express();
 const server = http.createServer(app);
 
-/* ── Logger helper ───────────────────────────────────── */
-function log(nivel, modulo, msg) {
-  const ts = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  console.log(`[${ts}] [${nivel}] [${modulo}] ${msg}`);
-}
-
-/* ── Socket.io ────────────────────────────────────────── */
+// ── Socket.io ─────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin:  process.env.CLIENT_URL ?? 'http://localhost:5173',
+    origin: process.env.CLIENT_URL ?? 'http://localhost',
     methods: ['GET', 'POST'],
+    credentials: true,
   },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 20000,
+  pingInterval: 25000,
 });
 
-// Autenticación de socket: acepta JWT, tokens mock y conexiones guest (clientes)
+// Auth de socket
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
-
-  // Sin token o token vacío → conexión guest (vista del cliente)
   if (!token) {
     socket.user = { username: 'guest', rol: 'CLIENTE' };
     return next();
   }
-
-  // Token mock para desarrollo
   if (token.startsWith('mock-') || token.startsWith('guest-')) {
     socket.user = { username: 'dev', rol: 'MESERO' };
     return next();
   }
-
-  // JWT real
   try {
     socket.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch {
-    // En lugar de rechazar, permitir como guest con permisos limitados
     socket.user = { username: 'guest', rol: 'CLIENTE' };
     next();
   }
 });
 
-io.on('connection', (socket) => {
-  const { username, rol } = socket.user ?? {};
-  log('INFO', 'Socket', `Conectado: ${username} (${rol}) [${socket.id}]`);
+setupSocketHandlers(io);
 
-  // Los clientes pueden unirse a la sala de su pedido específico
-  socket.on('join:pedido', (idPedido) => {
-    if (rol === 'CLIENTE' && idPedido) {
-      socket.join(`pedido:${idPedido}`);
-      log('INFO', 'Socket', `Guest unido a sala pedido:${idPedido}`);
-    }
-  });
-
-  socket.on('disconnect', (reason) => {
-    log('INFO', 'Socket', `Desconectado: ${username} — ${reason}`);
-  });
-});
-
-// Helper para emitir a todos Y a la sala específica del pedido
-io.emitPedidoEstado = function (id_pedido, estado) {
+// Helper para emitir estado de pedido a todos y a sala específica
+io.emitPedidoEstado = function(id_pedido, estado) {
   io.emit('pedido:estado', { id_pedido, estado });
   io.to(`pedido:${id_pedido}`).emit('pedido:estado', { id_pedido, estado });
 };
 
-/* ── Express middleware ───────────────────────────────── */
-app.use(cors({ origin: process.env.CLIENT_URL ?? 'http://localhost:5173' }));
-app.use(express.json({ limit: '1mb' }));
+// ── Middlewares de seguridad ──────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc:  ["'self'", "'unsafe-inline'"],
+      styleSrc:   ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
+      fontSrc:    ["'self'", 'fonts.gstatic.com'],
+      imgSrc:     ["'self'", 'data:', 'https:', 'images.unsplash.com'],
+      connectSrc: ["'self'", 'ws:', 'wss:'],
+    },
+  },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
-// Adjuntar io a cada request
+app.use(cors({
+  origin: process.env.CLIENT_URL ?? 'http://localhost',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+app.use(compression());
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
+// ── Logging HTTP ──────────────────────────────────────────
+app.use(morgan('combined', {
+  stream: { write: (msg) => logger.http(msg.trim()) },
+  skip: (req) => req.url === '/health',
+}));
+
+// ── Inyectar io en cada request ───────────────────────────
 app.use((req, _res, next) => {
   req.io = io;
   next();
 });
 
-// Rate limiting simple en login (sin dependencias extra)
-const loginAttempts = new Map();
-app.use('/api/auth/login', (req, res, next) => {
-  const ip  = req.ip ?? req.socket.remoteAddress;
-  const now = Date.now();
-  const entry = loginAttempts.get(ip) ?? { count: 0, since: now };
+// ── Archivos estáticos de exportación ─────────────────────
+app.use('/exports', express.static(path.join(__dirname, '..', 'exports'), {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.xlsx') res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    if (ext === '.pdf')  res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`);
+  },
+}));
 
-  // Resetear ventana de 1 minuto
-  if (now - entry.since > 60_000) {
-    entry.count = 0;
-    entry.since = now;
-  }
-
-  entry.count++;
-  loginAttempts.set(ip, entry);
-
-  if (entry.count > 10) {
-    return res.status(429).json({
-      message: 'Demasiados intentos de login. Espera 1 minuto.',
-    });
-  }
-  next();
-});
-
-/* ── Rutas ────────────────────────────────────────────── */
+// ── Rutas API ─────────────────────────────────────────────
 app.use('/api', routes);
 
+// ── Health check ──────────────────────────────────────────
 app.get('/health', async (_req, res) => {
   try {
     await pool.query('SELECT 1');
-    res.json({ status: 'ok', db: 'connected', time: new Date().toISOString() });
-  } catch {
-    res.status(500).json({ status: 'error', db: 'disconnected' });
+    const redisOk = await redis.ping().then(r => r === 'PONG').catch(() => false);
+    const memUsage = process.memoryUsage();
+    res.json({
+      status:   'ok',
+      version:  '2.0.0',
+      db:       'connected',
+      redis:    redisOk ? 'connected' : 'disconnected',
+      uptime:   Math.floor(process.uptime()),
+      memory: {
+        heapUsed:  Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB',
+      },
+      time: new Date().toISOString(),
+    });
+  } catch (err) {
+    logger.error('Health check failed', { error: err.message });
+    res.status(503).json({ status: 'error', db: 'disconnected', error: err.message });
   }
 });
 
-// 404 para rutas desconocidas
+// ── 404 y manejo de errores ───────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ message: 'Ruta no encontrada.' });
 });
 
-/* ── Inicio ───────────────────────────────────────────── */
-const PORT = process.env.PORT ?? 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  log('INFO', 'Server', '');
-  log('INFO', 'Server', '🔥 El Fogón Criollo – Backend iniciado');
-  log('INFO', 'Server', `   API:    http://localhost:${PORT}/api`);
-  log('INFO', 'Server', `   Health: http://localhost:${PORT}/health`);
-  log('INFO', 'Server', `   LAN:    http://<tu-ip>:${PORT}/api`);
-  log('INFO', 'Server', '');
+app.use((err, _req, res, _next) => {
+  logger.error('Unhandled error', { error: err.message, stack: err.stack });
+  const status = err.status ?? err.statusCode ?? 500;
+  res.status(status).json({
+    message: process.env.NODE_ENV === 'production' ? 'Error interno del servidor' : err.message,
+  });
 });
+
+// ── Inicio ────────────────────────────────────────────────
+const PORT = process.env.PORT ?? 3000;
+server.listen(PORT, '0.0.0.0', async () => {
+  logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  logger.info('🔥 El Fogón Criollo — Backend v2.0 iniciado');
+  logger.info(`   API:    http://localhost:${PORT}/api`);
+  logger.info(`   Health: http://localhost:${PORT}/health`);
+  logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+  // Warm up DB pool
+  try {
+    await pool.query('SELECT 1');
+    logger.info('✓ PostgreSQL conectado');
+  } catch (err) {
+    logger.error('✗ PostgreSQL no disponible', { error: err.message });
+  }
+
+  try {
+    await redis.ping();
+    logger.info('✓ Redis conectado');
+  } catch (err) {
+    logger.warn('✗ Redis no disponible (modo sin caché)', { error: err.message });
+  }
+});
+
+// Graceful shutdown
+async function shutdown(signal) {
+  logger.info(`${signal} recibido. Apagando gracefully...`);
+  server.close(async () => {
+    await pool.end();
+    redis.disconnect();
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10000);
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
+
+module.exports = { app, server, io };

@@ -1,0 +1,47 @@
+.card { background:linear-gradient(145deg,rgba(45,28,16,0.97),rgba(28,17,9,0.99)); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:18px; display:flex; flex-direction:column; gap:12px; position:relative; overflow:hidden; }
+.cardNuevo { box-shadow:0 0 0 2px rgba(242,167,75,0.5),0 8px 32px rgba(242,167,75,0.15); }
+.card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:12px 0 0 12px; }
+.pendiente::before { background:var(--ember); }
+.proceso::before   { background:#5BA4F5; }
+.listo::before     { background:var(--success); }
+.urgBar { position:absolute; top:0; left:0; right:0; height:2px; }
+.urg_alta .urgBar  { background:linear-gradient(90deg,var(--error),transparent); animation:urgaPulse 1s step-end infinite; }
+.urg_media .urgBar { background:linear-gradient(90deg,var(--warning),transparent); }
+@keyframes urgaPulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+.urg_alta  { box-shadow:0 0 0 1px rgba(224,82,82,0.3); }
+.urg_media { box-shadow:0 0 0 1px rgba(242,167,75,0.2); }
+.header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.headerLeft { display:flex; flex-direction:column; gap:3px; }
+.headerRight { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.pedidoId { font-family:var(--font-display); font-size:20px; font-weight:900; color:var(--text-primary); }
+.mesaInfo { font-size:12px; color:var(--text-tertiary); }
+.estadoBadge { font-size:10px; letter-spacing:1px; text-transform:uppercase; font-weight:500; padding:3px 8px; border-radius:20px; border:1px solid; }
+.pendiente { color:var(--ember);   border-color:rgba(242,167,75,0.4);  background:rgba(242,167,75,0.1); }
+.proceso   { color:#5BA4F5;        border-color:rgba(91,164,245,0.4);  background:rgba(91,164,245,0.1); }
+.listo     { color:var(--success); border-color:rgba(76,175,80,0.4);   background:rgba(76,175,80,0.1); }
+.timer { font-family:var(--font-display); font-size:13px; font-weight:700; display:flex; align-items:center; gap:4px; }
+.timerUrg_normal { color:var(--text-tertiary); }
+.timerUrg_media  { color:var(--ember); }
+.timerUrg_alta   { color:var(--error); animation:blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.4} }
+.mesero { font-size:12px; color:var(--text-tertiary); display:flex; align-items:center; gap:6px; }
+.divider { height:1px; background:linear-gradient(90deg,transparent,var(--border-subtle),transparent); }
+.items { list-style:none; display:flex; flex-direction:column; gap:8px; }
+.item  { display:flex; align-items:flex-start; gap:8px; }
+.itemImg { width:34px; height:34px; border-radius:7px; object-fit:cover; background:rgba(255,255,255,0.06); flex:0 0 auto; }
+.itemCant { font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--ember); min-width:28px; flex-shrink:0; }
+.itemData { display:flex; flex-direction:column; gap:2px; }
+.itemNombre { font-size:14px; color:var(--text-primary); }
+.itemNota   { font-size:11px; color:var(--text-tertiary); font-style:italic; display:flex; align-items:center; gap:4px; }
+.accionWrap { margin-top:4px; }
+.actionBtn { width:100%; border:none; border-radius:var(--radius-sm); padding:11px; font-size:13px; font-weight:500; letter-spacing:0.5px; transition:all var(--transition-base); cursor:pointer; }
+.btn_pendiente { background:rgba(242,167,75,0.15); border:1px solid rgba(242,167,75,0.3); color:var(--ember); }
+.btn_pendiente:hover { background:rgba(242,167,75,0.25); transform:translateY(-1px); }
+.btn_proceso { background:rgba(91,164,245,0.15); border:1px solid rgba(91,164,245,0.3); color:#5BA4F5; }
+.btn_proceso:hover { background:rgba(91,164,245,0.25); transform:translateY(-1px); }
+.confirmRow { display:flex; align-items:center; gap:8px; }
+.confirmMsg { font-size:12px; color:var(--text-tertiary); flex:1; }
+.confirmBtn { padding:7px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; cursor:pointer; transition:all var(--transition-fast); border:1px solid; }
+.confirmSi { background:rgba(76,175,80,0.15); border-color:rgba(76,175,80,0.4); color:#4CAF50; }
+.confirmNo { background:rgba(224,82,82,0.1); border-color:rgba(224,82,82,0.3); color:var(--error); }
+.urgAlert { font-size:11px; color:var(--error); background:rgba(224,82,82,0.08); border:1px solid rgba(224,82,82,0.2); border-radius:6px; padding:6px 10px; text-align:center; display:flex; align-items:center; justify-content:center; gap:5px; }

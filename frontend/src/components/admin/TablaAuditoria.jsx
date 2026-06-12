@@ -1,0 +1,1 @@
+export { TablaAuditoria } from './AdminComponents';

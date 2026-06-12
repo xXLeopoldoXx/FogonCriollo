@@ -1,0 +1,47 @@
+/* Charts.module.css - compartido entre todos los gráficos admin */
+
+.chartTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+.empty {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 32px 0;
+  text-align: center;
+}
+
+/* ── Tooltip personalizado ────────────────────────────── */
+.tooltip {
+  background: rgba(28,17,9,0.97);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-lg);
+  font-size: var(--text-sm);
+}
+.tooltipLabel {
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+.tooltipDot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tooltipName { color: var(--text-tertiary); }
+.tooltipVal  { color: var(--text-primary); font-weight: 600; margin-left: auto; padding-left: 12px; }

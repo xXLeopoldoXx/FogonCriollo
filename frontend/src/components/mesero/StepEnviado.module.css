@@ -1,0 +1,166 @@
+/* StepEnviado.module.css */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100dvh - 130px);
+  padding: 40px 24px;
+  gap: 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Partículas ───────────────────────────────────────── */
+.particlesWrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  border-radius: 3px;
+}
+
+/* ── Ícono ────────────────────────────────────────────── */
+.successIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconRing {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+}
+.checkIcon {
+  color: #4CAF50;
+  filter: drop-shadow(0 0 16px rgba(76,175,80,0.5));
+}
+
+/* ── Texto ────────────────────────────────────────────── */
+.textBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.title {
+  font-size: var(--text-4xl);
+  color: var(--text-primary);
+}
+.subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+}
+.pedidoId {
+  color: var(--ember);
+  font-family: var(--font-display);
+}
+.metaInfo {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+/* ── Link card ────────────────────────────────────────── */
+.linkCard {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(74,144,226,0.08);
+  border: 1px solid rgba(74,144,226,0.25);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  text-align: left;
+}
+.linkTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #5BA4F5;
+  margin-bottom: 4px;
+}
+.linkDesc {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+}
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.linkUrl {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.copyBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border: 1px solid rgba(74,144,226,0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(74,144,226,0.12);
+  color: #5BA4F5;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+.copyBtnOk {
+  border-color: rgba(76,175,80,0.4);
+  background: rgba(76,175,80,0.12);
+  color: #4CAF50;
+}
+.openBtn {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  background: rgba(255,255,255,0.04);
+  transition: all var(--transition-fast);
+}
+.openBtn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+/* ── Actions ──────────────────────────────────────────── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.nuevoPedidoBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 36px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-600));
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: white;
+  box-shadow: var(--shadow-glow);
+  letter-spacing: 0.3px;
+}
+.nuevoPedidoBtn:hover { box-shadow: 0 6px 28px rgba(200,90,26,0.55); }
+.hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}

@@ -1,0 +1,89 @@
+/* KpiRow.module.css */
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+.card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(42,25,12,0.97), rgba(28,17,9,0.99));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  cursor: default;
+  transition: box-shadow var(--transition-base);
+}
+.card:hover { box-shadow: var(--shadow-ember); }
+
+.accentBar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+}
+
+/* accent colors */
+.brand  .accentBar { background: linear-gradient(90deg, var(--brand), var(--ember)); }
+.green  .accentBar { background: linear-gradient(90deg, #2e7d32, #4CAF50); }
+.blue   .accentBar { background: linear-gradient(90deg, #1565C0, #42A5F5); }
+.amber  .accentBar { background: linear-gradient(90deg, #E65100, #FF9800); }
+.teal   .accentBar { background: linear-gradient(90deg, #00695C, #26A69A); }
+.purple .accentBar { background: linear-gradient(90deg, #6A1B9A, #AB47BC); }
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cardLabel {
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.iconWrap {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+.icon_brand  { background: rgba(200,90,26,0.15);  color: var(--ember); }
+.icon_green  { background: rgba(76,175,80,0.12);  color: #4CAF50; }
+.icon_blue   { background: rgba(66,165,245,0.12); color: #42A5F5; }
+.icon_amber  { background: rgba(255,152,0,0.12);  color: #FF9800; }
+.icon_teal   { background: rgba(38,166,154,0.12); color: #26A69A; }
+.icon_purple { background: rgba(171,71,188,0.12); color: #AB47BC; }
+
+.cardValue {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.brand  .cardValue { color: var(--ember); }
+.green  .cardValue { color: #4CAF50; }
+.blue   .cardValue { color: #42A5F5; }
+.amber  .cardValue { color: #FF9800; }
+.teal   .cardValue { color: #26A69A; }
+.purple .cardValue { color: #AB47BC; }
+
+.cardSub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 1300px) {
+  .row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 700px) {
+  .row { grid-template-columns: repeat(2, 1fr); }
+  .cardValue { font-size: 22px; }
+}

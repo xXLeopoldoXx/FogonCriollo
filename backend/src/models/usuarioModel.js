@@ -1,8 +1,3 @@
-// ============================================================
-// El Fogón Criollo – models/usuarioModel.js
-// Acceso a datos: tabla usuario + log_sistema
-// ============================================================
-
 const { query } = require('../db/pool');
 
 async function findByUsername(username) {

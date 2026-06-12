@@ -1,8 +1,3 @@
-// ============================================================
-// El Fogón Criollo – models/mesaModel.js
-// Acceso a datos: tabla mesa
-// ============================================================
-
 const { query } = require('../db/pool');
 
 async function getAll() {

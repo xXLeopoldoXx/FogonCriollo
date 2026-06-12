@@ -1,0 +1,245 @@
+/* StepMesa.module.css */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 100px; /* espacio para la CTA bar flotante */
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+.headerIcon {
+  width: 52px; height: 52px;
+  border-radius: var(--radius-md);
+  background: rgba(200,90,26,0.12);
+  border: 1px solid var(--border-base);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ember);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+}
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.leyenda {
+  margin-left: auto;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.leyendaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.3px;
+}
+.leyendaDot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dotLibre   { background: rgba(255,255,255,0.2); }
+.dotOcupada { background: #F2A74B; }
+.dotListo   { background: #4CAF50; }
+
+/* ── Pisos ────────────────────────────────────────────── */
+.pisos {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pisoSection {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pisoHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.pisoLabel {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+}
+.pisoCont {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.mesasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+}
+
+/* ── Mesa card ────────────────────────────────────────── */
+.mesaCard {
+  position: relative;
+  border-radius: var(--radius-md);
+  padding: 14px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-subtle);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.estadoBar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+}
+.libreBar    { background: rgba(255,255,255,0.08); }
+.ocupadaPend { background: #F2A74B; }
+.ocupadaProc { background: #5BA4F5; }
+.ocupadaList { background: #4CAF50; }
+
+.mesaLibre {
+  background: rgba(255,255,255,0.03);
+}
+.mesaLibre:hover {
+  border-color: var(--border-strong);
+  background: rgba(200,90,26,0.06);
+}
+
+.mesaOcupada {
+  background: rgba(242,167,75,0.04);
+  border-color: rgba(242,167,75,0.2);
+}
+
+.mesaActive {
+  border-color: var(--brand) !important;
+  background: rgba(200,90,26,0.12) !important;
+  box-shadow: 0 0 0 2px rgba(200,90,26,0.2), var(--shadow-glow);
+}
+
+.mesaNum {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.mesaMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.mesaCap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.estadoPill {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+}
+.ocupadaPend { color: #F2A74B; background: rgba(242,167,75,0.12); }
+.ocupadaProc { color: #5BA4F5; background: rgba(91,164,245,0.12); }
+.ocupadaList { color: #4CAF50; background: rgba(76,175,80,0.12); }
+
+.selectedCheck {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── CTA bar flotante ─────────────────────────────────── */
+.ctaBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 300px; /* evitar sidebar */
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 28px;
+  background: linear-gradient(to top, var(--carbon-950) 80%, transparent);
+  border-top: 1px solid var(--border-base);
+}
+
+.ctaInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ctaMesa {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.ctaSub {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.ctaBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-600));
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: white;
+  box-shadow: var(--shadow-glow);
+  letter-spacing: 0.3px;
+  transition: box-shadow var(--transition-fast);
+}
+.ctaBtn:hover {
+  box-shadow: 0 6px 28px rgba(200,90,26,0.55);
+}
+
+@media (max-width: 900px) {
+  .ctaBar { right: 0; }
+  .mesasGrid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+}
