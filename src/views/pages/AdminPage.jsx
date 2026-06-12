@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import {
   LayoutDashboard, TrendingUp, UtensilsCrossed, Search,
-  DollarSign, CheckCircle2, Clock, Bell, Flame,
+  DollarSign, CheckCircle2, Clock, Bell, Flame, FileDown,
 } from 'lucide-react';
 import { useAuth }          from '../../context/AuthContext';
 import { useAdmin }         from '../../controllers/useAdmin';
@@ -158,6 +158,7 @@ export function AdminPage() {
     refrescarVentas,
     productos, categorias,
     guardarProducto, borrarProducto,
+    descargarAuditoria,
   } = useAdmin();
 
   const [desde, setDesde] = useState(() => {
@@ -375,9 +376,15 @@ export function AdminPage() {
         {/* ─── AUDITORÍA ─── */}
         {seccion === 'auditoria' && (
           <div className={styles.auditoriaGrid}>
-            <p className={styles.audDesc}>
-              Historial completo de cambios de estado en pedidos — generado automáticamente por el trigger de la base de datos.
-            </p>
+            <div className={styles.audHeader}>
+              <p className={styles.audDesc}>
+                Historial completo de cambios de estado en pedidos — generado automáticamente por el trigger de la base de datos.
+              </p>
+              <button className={styles.exportBtn} onClick={descargarAuditoria}>
+                <FileDown size={16} />
+                Exportar Excel
+              </button>
+            </div>
             <TablaAuditoria registros={auditoria} />
           </div>
         )}

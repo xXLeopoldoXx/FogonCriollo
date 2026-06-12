@@ -64,6 +64,23 @@ export async function getAuditoria(token, limite = 50) {
   return res.json();
 }
 
+/** GET /api/admin/auditoria/exportar → descarga .xlsx */
+export async function exportarAuditoria(token, limite = 500) {
+  const res = await fetch(`${API_BASE}/admin/auditoria/exportar?limite=${limite}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Error al exportar auditoría');
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `auditoria_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 /** GET /api/admin/ventas-por-hora → picos de demanda del día */
 export async function getVentasPorHora(token) {
   const res = await fetch(`${API_BASE}/admin/ventas-por-hora`, {

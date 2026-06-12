@@ -200,7 +200,24 @@
 
 /* ── Auditoría ── */
 .auditoriaGrid { display: flex; flex-direction: column; gap: 16px; }
-.audDesc { font-size: 13px; color: var(--text-dim); }
+.audHeader     { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.audDesc       { font-size: 13px; color: var(--text-dim); flex: 1; }
+.exportBtn {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           6px;
+  padding:       8px 16px;
+  background:    var(--brand);
+  color:         #fff;
+  border:        none;
+  border-radius: 8px;
+  font-size:     13px;
+  font-weight:   600;
+  cursor:        pointer;
+  white-space:   nowrap;
+  transition:    background 0.15s;
+}
+.exportBtn:hover { background: #92400e; }
 
 /* ── Productos ── */
 .productosGrid {

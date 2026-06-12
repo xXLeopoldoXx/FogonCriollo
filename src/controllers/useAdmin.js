@@ -10,6 +10,7 @@ import {
   getReporteVentas, getAuditoria, getVentasPorHora,
   getAdminProductos, getCategorias,
   crearAdminProducto, actualizarAdminProducto, eliminarAdminProducto,
+  exportarAuditoria,
 } from '../models/adminModel';
 import { connectSocket, disconnectSocket, EVENTS } from '../models/socketModel';
 
@@ -127,12 +128,22 @@ export function useAdmin() {
     }
   }, [token]);
 
+  const descargarAuditoria = useCallback(async () => {
+    try {
+      setError('');
+      await exportarAuditoria(token);
+    } catch (e) {
+      setError(e.message);
+    }
+  }, [token]);
+
   return {
-   resumen, topProductos, ventasDiarias, ventasPorHora, auditoria,
+    resumen, topProductos, ventasDiarias, ventasPorHora, auditoria,
     productos, categorias,
     loading, error, connected,
     seccion, setSeccion,
     refrescarVentas,
     guardarProducto, borrarProducto,
+    descargarAuditoria,
   };
 }
