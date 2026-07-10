@@ -62,6 +62,7 @@ services:
     environment:
       DB_HOST: postgres
       REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       NODE_ENV: ${NODE_ENV:-development}
     volumes:
       - ./backend:/app

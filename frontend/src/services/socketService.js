@@ -5,8 +5,7 @@
 
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL ?? '/').replace(/\/api$/, '');
-
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:3000').replace(/\/api$/, '');
 let socket = null;
 
 export const EVENTS = {

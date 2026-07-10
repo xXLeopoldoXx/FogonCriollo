@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, MessageSquare, Timer, AlertTriangle } from 'lucide-react';
+import { getNextEstado } from '../../models/pedidoStateMachine';
 import styles from './TarjetaPedido.module.css';
 
 function playTone(type = 'new') {
@@ -54,7 +55,7 @@ function urgencia(seg) {
   return 'normal';
 }
 
-export function TarjetaPedido({ pedido, onAvanzar, isNuevo }) {
+export function TarjetaPedido({ pedido, onAvanzar, isNuevo, loading = false }) {
   const cfg = ESTADO_CFG[pedido.estado] ?? ESTADO_CFG.PENDIENTE;
   const { txt: timerTxt, seg } = useTimer(pedido.fecha_hora);
   const urg = urgencia(seg);
@@ -72,10 +73,11 @@ export function TarjetaPedido({ pedido, onAvanzar, isNuevo }) {
   }, [confirmando]);
 
   function handleAccion() {
+    if (loading) return;
     if (!confirmando) { setConfirmando(true); return; }
     setConfirmando(false);
     if (cfg.audio) playTone(cfg.audio);
-    onAvanzar(pedido.id_pedido);
+    onAvanzar(pedido.id_pedido, getNextEstado(pedido.estado));
   }
 
   return (
@@ -109,18 +111,40 @@ export function TarjetaPedido({ pedido, onAvanzar, isNuevo }) {
           </li>
         ))}
       </ul>
-      {cfg.accion && (
+            {cfg.accion && (
         <div ref={confirmRef} className={styles.accionWrap}>
           <AnimatePresence mode="wait">
             {confirmando ? (
               <motion.div key="confirm" className={styles.confirmRow} initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-                <span className={styles.confirmMsg}>¿Confirmar?</span>
-                <button className={`${styles.confirmBtn} ${styles.confirmSi}`} onClick={handleAccion}>Sí ✓</button>
-                <button className={`${styles.confirmBtn} ${styles.confirmNo}`} onClick={() => setConfirmando(false)}>No</button>
+                <span className={styles.confirmMsg}>
+                  {loading ? 'Procesando...' : '¿Confirmar?'}
+                </span>
+                <button 
+                  className={`${styles.confirmBtn} ${styles.confirmSi}`} 
+                  onClick={handleAccion}
+                  disabled={loading}
+                >
+                  {loading ? '...' : 'Sí ✓'}
+                </button>
+                <button 
+                  className={`${styles.confirmBtn} ${styles.confirmNo}`} 
+                  onClick={() => setConfirmando(false)}
+                  disabled={loading}
+                >
+                  No
+                </button>
               </motion.div>
             ) : (
-              <motion.button key="action" className={`${styles.actionBtn} ${styles[`btn_${cfg.cls}`]}`} onClick={handleAccion} whileTap={{ scale:0.96 }}>
-                {cfg.accion}
+              <motion.button 
+                key="action" 
+                className={`${styles.actionBtn} ${styles[`btn_${cfg.cls}`]}`} 
+                onClick={handleAccion} 
+                disabled={loading} 
+                whileTap={loading ? undefined : { scale: 0.96 }}
+                aria-label={cfg.accion} 
+              >
+                {}
+                {loading ? 'Procesando...' : cfg.accion}
               </motion.button>
             )}
           </AnimatePresence>

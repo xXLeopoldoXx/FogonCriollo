@@ -1,32 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { connectSocket, disconnectSocket, EVENTS } from '../services/socketService';
+import { cambiarEstadoPedido, getPedidosCocina } from '../models/pedidoModel';
+import {
+  actualizarEstadoPedido,
+  agregarPedidoActivo,
+  contarEstadosCocina,
+  getNextEstado,
+  ordenarPedidosCocina,
+  puedeTransicionar,
+} from '../models/pedidoStateMachine';
 import toast from 'react-hot-toast';
 
-const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
+const defaultApi = { getPedidosCocina, cambiarEstadoPedido };
 
-function authHeaders(token) {
-  return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
-}
-
-async function getPedidosCocina(token) {
-  const r = await fetch(`${API_BASE}/pedidos/cocina`, { headers: authHeaders(token) });
-  if (!r.ok) throw new Error('Error al obtener pedidos');
-  return r.json();
-}
-
-async function cambiarEstadoApi(token, id_pedido, estado) {
-  const r = await fetch(`${API_BASE}/pedidos/${id_pedido}/estado`, {
-    method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ estado }),
-  });
-  if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.message ?? 'Error al cambiar estado'); }
-  return r.json();
-}
-
-const SIGUIENTE_ESTADO = { PENDIENTE: 'EN_PROCESO', EN_PROCESO: 'LISTO' };
-const ORDEN = { PENDIENTE: 0, EN_PROCESO: 1, LISTO: 2 };
-
-export function useCocina() {
+export function useCocina({ socket: socketOverride, api = defaultApi, initialLoadDelay = 500 } = {}) {
   const { token } = useAuthStore();
   const [pedidos, setPedidos]         = useState([]);
   const [nuevosIds, setNuevosIds]     = useState(new Set());
@@ -37,18 +25,18 @@ export function useCocina() {
   const initialLoad = useRef(true);
 
   useEffect(() => {
-    getPedidosCocina(token)
+    api.getPedidosCocina(token)
       .then(data => setPedidos(data))
       .catch(e => setError(e.message))
-      .finally(() => { setLoading(false); setTimeout(() => { initialLoad.current = false; }, 500); });
-  }, [token]);
+      .finally(() => { setLoading(false); setTimeout(() => { initialLoad.current = false; }, initialLoadDelay); });
+  }, [api, initialLoadDelay, token]);
 
   useEffect(() => {
-    const socket = connectSocket(token);
+    const socket = socketOverride ?? connectSocket(token);
     socket.on(EVENTS.CONNECTED,    () => setConnected(true));
     socket.on(EVENTS.DISCONNECTED, () => setConnected(false));
     socket.on(EVENTS.PEDIDO_NUEVO, (pedido) => {
-      setPedidos(prev => prev.find(p => p.id_pedido === pedido.id_pedido) ? prev : [pedido, ...prev]);
+      setPedidos(prev => agregarPedidoActivo(prev, pedido));
       if (!initialLoad.current) {
         setAlertaPedido(pedido);
         setTimeout(() => setAlertaPedido(null), 5200);
@@ -56,21 +44,29 @@ export function useCocina() {
         setTimeout(() => setNuevosIds(prev => { const n = new Set(prev); n.delete(pedido.id_pedido); return n; }), 5000);
       }
     });
-    socket.on(EVENTS.PEDIDO_ESTADO, ({ id_pedido, estado }) => {
-      if (estado === 'ENTREGADO') setPedidos(prev => prev.filter(p => p.id_pedido !== id_pedido));
-      else setPedidos(prev => prev.map(p => p.id_pedido === id_pedido ? { ...p, estado } : p));
+    socket.on(EVENTS.PEDIDO_ESTADO, (payload = {}) => {
+      const { id_pedido, estado } = payload;
+      setPedidos(prev => {
+        try { return actualizarEstadoPedido(prev, id_pedido, estado); }
+        catch { return prev; }
+      });
     });
-    return () => disconnectSocket();
-  }, [token]);
+    return () => {
+      if (!socketOverride) disconnectSocket();
+    };
+  }, [socketOverride, token]);
 
-  const avanzarEstado = useCallback(async (id_pedido) => {
+  const avanzarEstado = useCallback(async (id_pedido, estadoSolicitado) => {
     const pedido = pedidos.find(p => p.id_pedido === id_pedido);
     if (!pedido) return;
-    const nuevoEstado = SIGUIENTE_ESTADO[pedido.estado];
-    if (!nuevoEstado) return;
-    setPedidos(prev => prev.map(p => p.id_pedido === id_pedido ? { ...p, estado: nuevoEstado } : p));
+    const nuevoEstado = estadoSolicitado ?? getNextEstado(pedido.estado);
+    if (!puedeTransicionar(pedido.estado, nuevoEstado)) {
+      setError(`Transición inválida: ${pedido.estado} -> ${nuevoEstado}`);
+      return;
+    }
+    setPedidos(prev => actualizarEstadoPedido(prev, id_pedido, nuevoEstado));
     try {
-      await cambiarEstadoApi(token, id_pedido, nuevoEstado);
+      await api.cambiarEstadoPedido(token, id_pedido, nuevoEstado);
       setError('');
     } catch (e) {
       setPedidos(prev => prev.map(p => p.id_pedido === id_pedido ? { ...p, estado: pedido.estado } : p));
@@ -78,18 +74,10 @@ export function useCocina() {
       setError(e.message);
       setTimeout(() => setError(''), 5000);
     }
-  }, [pedidos, token]);
+  }, [api, pedidos, token]);
 
-  const pedidosOrdenados = [...pedidos].sort((a, b) => {
-    const diff = (ORDEN[a.estado] ?? 9) - (ORDEN[b.estado] ?? 9);
-    return diff !== 0 ? diff : new Date(a.fecha_hora) - new Date(b.fecha_hora);
-  });
-
-  const contadores = {
-    pendiente:  pedidos.filter(p => p.estado === 'PENDIENTE').length,
-    en_proceso: pedidos.filter(p => p.estado === 'EN_PROCESO').length,
-    listo:      pedidos.filter(p => p.estado === 'LISTO').length,
-  };
+  const pedidosOrdenados = ordenarPedidosCocina(pedidos);
+  const contadores = contarEstadosCocina(pedidos);
 
   return { pedidos: pedidosOrdenados, nuevosIds, alertaPedido, contadores, avanzarEstado, loading, error, connected };
 }

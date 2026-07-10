@@ -117,6 +117,16 @@ export async function getPedidosMesero(token, id_mesero) {
   return data.map(normalizePedido);
 }
 
+//GET /api/pedidos/cocina
+export async function getPedidosCocina(token) {
+  const res = await fetchWithTimeout(
+    `${API_BASE}/pedidos/cocina`,
+    { headers: authHeaders(token) }
+  );
+  const data = await handleResponse(res);
+  return data.map(normalizePedido);
+}
+
 //PATCH /api/pedidos/:id_pedido/estado
 export async function cambiarEstadoPedido(token, id_pedido, estado) {
   if (!id_pedido) throw new Error('ID de pedido requerido.');

@@ -45,3 +45,4 @@
 .confirmSi { background:rgba(76,175,80,0.15); border-color:rgba(76,175,80,0.4); color:#4CAF50; }
 .confirmNo { background:rgba(224,82,82,0.1); border-color:rgba(224,82,82,0.3); color:var(--error); }
 .urgAlert { font-size:11px; color:var(--error); background:rgba(224,82,82,0.08); border:1px solid rgba(224,82,82,0.2); border-radius:6px; padding:6px 10px; text-align:center; display:flex; align-items:center; justify-content:center; gap:5px; }
+@media (max-width:560px) { .card{padding:14px;gap:10px;} .header{flex-direction:column;} .headerRight{align-items:flex-start;flex-direction:row;flex-wrap:wrap;} .confirmRow{flex-wrap:wrap;} .confirmMsg{flex-basis:100%;} .confirmBtn{flex:1;} }

@@ -1,276 +1,865 @@
-# El Fogón Criollo — Sistema de Gestión v2.0
+# El Fogón Criollo
 
-**Stack:** React 18 + Vite · Express · Socket.io · PostgreSQL 17 · Redis · Docker
+Sistema web para la gestión integral de restaurantes. La plataforma permite administrar pedidos, mesas, cocina, usuarios, reportes y métricas en tiempo real mediante una interfaz moderna, comunicación bidireccional y una infraestructura basada en contenedores Docker.
+
+El sistema implementa una arquitectura desacoplada compuesta por un cliente desarrollado en React, una API REST con Express, comunicación en tiempo real mediante Socket.io, almacenamiento persistente en PostgreSQL y un sistema de caché utilizando Redis.
 
 ---
 
-## Inicio Rápido con Docker
+# Índice
 
-Sigue estos pasos desde la **raíz del proyecto** (`FogonCriollo/`):
+1. Descripción del Proyecto
+2. Características Principales
+3. Arquitectura General
+4. Tecnologías Utilizadas
+5. Requisitos Previos
+6. Instalación y Configuración
+7. Servicios Disponibles
+8. Credenciales de Acceso
+9. Estructura del Proyecto
+10. Funcionalidades del Sistema
+11. Seguridad Implementada
+12. Exportaciones
+13. Desarrollo
+14. Pruebas Automatizadas
 
-### 1. Configurar variables de entorno
+---
+
+# Descripción del Proyecto
+
+El Fogón Criollo centraliza los procesos operativos de un restaurante dentro de una única plataforma, permitiendo controlar el flujo completo desde la toma del pedido hasta la entrega al cliente.
+
+El sistema incorpora comunicación en tiempo real entre las distintas áreas del restaurante, control de accesos basado en roles, panel administrativo con indicadores, generación de reportes, exportación de información y mecanismos de seguridad orientados a entornos productivos.
+
+Su arquitectura modular facilita el mantenimiento, escalabilidad e incorporación de nuevas funcionalidades sin afectar el resto del sistema.
+
+---
+
+# Características Principales
+
+## Gestión de Pedidos
+
+- Registro de pedidos por mesa.
+- Flujo secuencial para el personal de atención.
+- Actualización automática del estado de cada pedido.
+- Sincronización inmediata entre cocina y administración.
+
+## Gestión de Cocina
+
+- Visualización de pedidos pendientes.
+- Actualización del estado de preparación.
+- Organización mediante tablero Kanban.
+- Comunicación en tiempo real utilizando Socket.io.
+
+## Panel Administrativo
+
+- Dashboard con indicadores principales.
+- Gestión de usuarios.
+- Administración de productos.
+- Administración de mesas.
+- Auditoría de operaciones.
+- Reportes de ventas.
+- Estadísticas de rendimiento.
+
+## Comunicación en Tiempo Real
+
+- Actualización automática de pedidos.
+- Sin necesidad de recargar la aplicación.
+- Notificaciones entre módulos.
+- Sincronización instantánea entre clientes conectados.
+
+---
+
+# Arquitectura General
+
+```
+                    Cliente Web
+                  React + Vite
+                        │
+                        │ HTTP / WebSocket
+                        ▼
+          Nginx Reverse Proxy (Puerto 80)
+                        │
+          ┌─────────────┴─────────────┐
+          │                           │
+          ▼                           ▼
+   Express REST API              Socket.io
+          │                           │
+          └─────────────┬─────────────┘
+                        │
+          ┌─────────────┴─────────────┐
+          │                           │
+          ▼                           ▼
+     PostgreSQL 17                 Redis
+```
+
+---
+
+# Tecnologías Utilizadas
+
+## Frontend
+
+| Tecnología | Función |
+|------------|---------|
+| React 18 | Desarrollo de la interfaz de usuario |
+| Vite | Compilación y servidor de desarrollo |
+| Zustand | Gestión del estado global |
+| React Query | Administración de peticiones y caché |
+| Framer Motion | Animaciones |
+| React Hot Toast | Notificaciones |
+| Recharts | Visualización de estadísticas |
+
+---
+
+## Backend
+
+| Tecnología | Función |
+|------------|---------|
+| Express | API REST |
+| Socket.io | Comunicación en tiempo real |
+| Zod | Validación de datos |
+| Helmet | Seguridad HTTP |
+| Express Rate Limit | Limitación de peticiones |
+| Winston | Sistema de logs |
+| PDFKit | Exportación PDF |
+| ExcelJS | Exportación Excel |
+
+---
+
+## Base de Datos
+
+| Tecnología | Función |
+|------------|---------|
+| PostgreSQL 17 | Base de datos principal |
+| Redis 7 | Caché y blacklist de tokens |
+
+---
+
+## Infraestructura
+
+| Tecnología | Función |
+|------------|---------|
+| Docker | Contenedores |
+| Docker Compose | Orquestación |
+| Nginx | Proxy inverso |
+| pgAdmin | Administración de PostgreSQL |
+| Redis Commander | Administración de Redis |
+
+---
+
+# Requisitos Previos
+
+Antes de ejecutar el proyecto deben encontrarse instaladas las siguientes herramientas.
+
+- Docker Desktop
+- Docker Compose
+- Git
+
+Opcionalmente pueden instalarse las siguientes herramientas para tareas de administración y desarrollo.
+
+- Node.js 20 o superior
+- Make (Linux / macOS)
+- Visual Studio Code
+
+---
+
+# Instalación y Configuración
+
+Todos los comandos deben ejecutarse desde la raíz del proyecto.
+
+```
+FogonCriollo/
+```
+
+---
+
+## 1. Clonar el repositorio
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd FogonCriollo
+```
+
+---
+
+## 2. Configurar las variables de entorno
+
+Crear el archivo `.env` a partir del archivo de ejemplo.
+
 ```bash
 cp .env.example .env
 ```
 
-### 2. Levantar todo el sistema
-* **En Windows (PowerShell/CMD):**
-  ```bash
-  docker compose up -d
-
-  verificar que corre
-  docker compose ps 
-
-  subir tus datos uno por uno solo si es primera vez
-  docker compose exec fogon_postgres sh -c "PGPASSWORD=root psql -U postgres -d fogon_criollo -f /docker-entrypoint-initdb.d/01_schema.sql"
-
-  docker compose exec postgres sh -c "PGPASSWORD=root psql -U postgres -d fogon_criollo -f /docker-entrypoint-initdb.d/02_extras.sql"
-
-  docker compose exec postgres sh -c "PGPASSWORD=root psql -U postgres -d fogon_criollo -f /docker-entrypoint-initdb.d/03_seed.sql"
-  ```
-* **En Mac / Linux:**
-  ```bash
-  make up
-  ```
-
-### 3. Preparar la Base de Datos (Solo la primera vez)
-* **En Windows (PowerShell/CMD):**
-  ```bash
-  .\migrate.bat
-  .\seed.bat
-  ```
-* **En Mac / Linux:**
-  ```bash
-  make migrate
-  make seed
-  ```
-```
-
-**URLs:**
-| Servicio | URL |
-|---|---|
-| App principal | http://localhost |
-| API | http://localhost/api |
-| Health | http://localhost/health |
-| pgAdmin | http://localhost:5050 (con `make tools`) |
-| Redis Commander | http://localhost:8081 (con `make tools`) |
+Modificar los valores necesarios antes del primer despliegue.
 
 ---
 
-## Arquitectura
+## 3. Levantar los servicios
 
-```
-docker-compose.yml
-├── nginx          → Reverse proxy :80 (LAN + WS)
-├── frontend       → React + Vite :5173
-├── backend        → Express + Socket.io :3000
-├── postgres       → PostgreSQL 17 :5432
-└── redis          → Redis 7 :6379
+### Windows
+
+```bash
+docker compose up -d
 ```
 
-### Tecnologías nuevas v2
+### Linux / macOS
 
-| Área | Tecnología | Por qué |
-|---|---|---|
-| Estado frontend | **Zustand** | Más simple que Context, persiste en localStorage |
-| Data fetching | **React Query** | Cache, refetch automático, loading/error states |
-| Animaciones | **Framer Motion** | Transiciones fluidas entre pasos, microanimaciones |
-| Toasts | **react-hot-toast** | Notificaciones elegantes sin configuración |
-| Gráficos | **Recharts** | Charts responsivos con tooltips personalizados |
-| Validación backend | **Zod** | Schemas tipados, mensajes de error descriptivos |
-| Seguridad | **Helmet + express-rate-limit** | Headers HTTP seguros, límite de intentos de login |
-| Logging | **Winston + DailyRotateFile** | Logs estructurados con rotación diaria |
-| Excel export | **ExcelJS** | Excel con estilos, gradientes, autofilter |
-| PDF export | **PDFKit** | PDFs con branding, tablas y KPIs |
-| Cache | **Redis (ioredis)** | Cache de queries, blacklist de tokens JWT |
-| Token revocation | **Redis blacklist** | Logout real invalidando el JWT |
+```bash
+make up
+```
 
 ---
 
-## Estructura del proyecto
+## 4. Verificar el estado de los contenedores
 
+```bash
+docker compose ps
 ```
-src/
-├── styles/
-│   ├── variables.css        ← Design tokens (colores, tipografía, sombras)
-│   └── global.css           ← Reset + base global
-│
-├── services/
-│   └── authService.js       ← Llamadas API: login, logout, session storage
-│
-├── context/
-│   └── AuthContext.jsx      ← Estado global de autenticación (React Context)
-│
-├── hooks/
-│   └── useLogin.js          ← Lógica de login separada de la UI
-│
-├── components/
-│   ├── auth/
-│   │   ├── RoleSelector.jsx         ← Selector visual de rol
-│   │   └── RoleSelector.module.css
-│   └── ui/
-│       ├── InputField.jsx           ← Input reutilizable con ícono
-│       ├── InputField.module.css
-│       ├── Button.jsx               ← Botón con loading, variantes
-│       └── Button.module.css
-│
-├── pages/
-│   ├── LoginPage.jsx        ← Composición del login (sin lógica)
-│   ├── LoginPage.module.css
-│   ├── MeseroPage.jsx       ← (próximo)
-│   ├── CocinaPage.jsx       ← (próximo)
-│   └── AdminPage.jsx        ← (próximo)
-│
-└── App.jsx                  ← Router + Providers + PrivateRoute
-fogon/
-├── docker-compose.yml        ← Orquestación de servicios
-├── Makefile                  ← Comandos: make up / make seed / make serve-lan
-├── .env                      ← Variables de entorno
-│
-├── docker/
-│   ├── nginx/                ← Configuración del proxy inverso
-│   └── pgadmin/              ← Configuración de pgAdmin
-│
+
+Todos los servicios deben aparecer con estado **Up**.
+
+---
+
+## 5. Inicializar la base de datos
+
+Este procedimiento únicamente debe ejecutarse durante la primera instalación.
+
+### Windows
+
+```bash
+docker compose exec postgres sh -c "PGPASSWORD=root psql -U postgres -d fogon_criollo -f /docker-entrypoint-initdb.d/01_schema.sql"
+
+docker compose exec postgres sh -c "PGPASSWORD=root psql -U postgres -d fogon_criollo -f /docker-entrypoint-initdb.d/02_extras.sql"
+
+docker compose exec postgres sh -c "PGPASSWORD=root psql -U postgres -d fogon_criollo -f /docker-entrypoint-initdb.d/03_seed.sql"
+```
+
+o utilizando los scripts incluidos:
+
+```bash
+migrate.bat
+seed.bat
+```
+
+### Linux / macOS
+
+```bash
+make migrate
+make seed
+```
+
+---
+
+## 6. Verificar la instalación
+
+Una vez iniciados todos los servicios, el sistema estará disponible en las siguientes direcciones.
+
+| Servicio | Dirección |
+|----------|-----------|
+| Aplicación | http://localhost |
+| API REST | http://localhost/api |
+| Health Check | http://localhost/health |
+| pgAdmin | http://localhost:5050 |
+| Redis Commander | http://localhost:8081 |
+
+Los servicios pgAdmin y Redis Commander se encuentran disponibles únicamente cuando se ejecutan las herramientas de desarrollo correspondientes.
+
+---
+
+# Servicios Disponibles
+
+La infraestructura del sistema está compuesta por cinco servicios principales.
+
+| Servicio | Puerto | Descripción |
+|----------|---------|-------------|
+| Nginx | 80 | Proxy inverso y punto de entrada |
+| Frontend | 5173 | Aplicación React |
+| Backend | 3000 | API REST y Socket.io |
+| PostgreSQL | 5432 | Base de datos |
+| Redis | 6379 | Caché y blacklist de JWT |
+
+La comunicación entre servicios se realiza completamente mediante Docker Compose.
+
+# Credenciales de Acceso
+
+Las siguientes credenciales permiten acceder a los diferentes módulos del sistema durante el desarrollo y las pruebas.
+
+| Usuario | Contraseña | Rol |
+|----------|------------|-----|
+| admin | admin123 | Administrador |
+| mesero1 | mesero123 | Mesero |
+| mesero2 | mesero123 | Mesero |
+| cocina1 | cocina123 | Cocina |
+
+---
+
+# Estructura del Proyecto
+
+El proyecto sigue una arquitectura modular, separando claramente la aplicación cliente, la API, la infraestructura y la configuración del entorno.
+
+```text
+FogonCriollo/
+
 ├── backend/
-│   ├── Dockerfile
-│   ├── package.json          ← Helmet, Zod, ExcelJS, PDFKit, Redis, Winston...
-│   └── src/
-│       ├── server.js         ← Express + Socket.io + Helmet + Compression
-│       ├── db/
-│       │   ├── pool.js       ← Pool PostgreSQL con logging
-│       │   └── redis.js      ← ioredis + helpers de caché
-│       ├── middleware/
-│       │   ├── auth.js       ← JWT + RBAC + blacklist Redis
-│       │   └── validate.js   ← Validación Zod centralizada
-│       ├── controllers/
-│       │   ├── authController.js
-│       │   ├── pedidoController.js
-│       │   ├── adminController.js   ← + actividad usuarios + mesas + notifs
-│       │   ├── exportController.js  ← Excel y PDF
-│       │   └── mesaController.js
-│       ├── models/
-│       │   ├── adminModel.js        ← + rendimiento mesas + actividad + notifs
-│       │   ├── pedidoModel.js
-│       │   ├── productoModel.js
-│       │   ├── mesaModel.js
-│       │   └── usuarioModel.js
-│       ├── routes/index.js          ← Rate limiting por endpoint
-│       ├── services/
-│       │   ├── exportService.js     ← ExcelJS + PDFKit con branding
-│       │   └── socketService.js
-│       └── utils/logger.js          ← Winston con rotación diaria
-│
-└── frontend/
-    ├── Dockerfile
-    ├── vite.config.js
-    ├── index.html
-    └── src/
-        ├── App.jsx                  ← React Query + rutas + guards
-        ├── main.jsx
-        ├── stores/
-        │   └── authStore.js         ← Zustand con persistencia
-        ├── hooks/
-        │   ├── useMesero.js         ← Flujo secuencial 4 pasos
-        │   ├── useCocina.js
-        │   └── useAdmin.js          ← React Query + exportaciones
-        ├── services/
-        │   └── socketService.js     ← Singleton Socket.io
-        ├── styles/
-        │   ├── tokens.css           ← Design tokens completos
-        │   └── global.css
-        ├── pages/
-        │   ├── LoginPage.jsx        ← Validación inline + animaciones
-        │   ├── MeseroPage.jsx       ← Flujo secuencial: Mesa→Carta→Confirmar→Enviado
-        │   ├── CocinaPage.jsx       ← Kanban en tiempo real
-        │   ├── AdminPage.jsx        ← Dashboard analítico con exportaciones
-        │   └── ClientePage.jsx
-        └── components/
-            ├── mesero/
-            │   ├── StepMesa.jsx          ← Selector de mesas con estados
-            │   ├── StepProductos.jsx     ← Catálogo con búsqueda y tabs
-            │   ├── StepConfirmacion.jsx  ← Revisión final con notas
-            │   ├── StepEnviado.jsx       ← Éxito con confetti + link cliente
-            │   └── PedidosActivos.jsx    ← Sidebar lateral
-            ├── cocina/
-            │   ├── TarjetaPedido.jsx
-            │   └── ContadorEstados.jsx
-            └── admin/
-                ├── KpiRow.jsx            ← 6 KPIs con contador animado
-                ├── VentasChart.jsx       ← Área chart Recharts
-                ├── HorasChart.jsx        ← Bar chart por hora
-                ├── TopProductos.jsx      ← Ranking con barras animadas
-                ├── MesasHeatmap.jsx      ← Estado visual de todas las mesas
-                ├── ActividadUsers.jsx    ← Rendimiento de meseros
-                ├── NotifPanel.jsx        ← Alertas en tiempo real
-                ├── TablaAuditoria.jsx    ← Historial de cambios
-                └── ProductosAdmin.jsx    ← CRUD con filtros y exportación
+├── frontend/
+├── docker/
+├── database/
+├── docker-compose.yml
+├── Makefile
+├── .env.example
+└── README.md
 ```
 
 ---
 
-## Credenciales de prueba
+## Backend
 
-| Usuario  | Contraseña | Rol     |
-|----------|------------|---------|
-| mesero1  | mesero123  | MESERO  |
-| mesero2  | mesero123  | MESERO  |
-| cocina1  | cocina123  | COCINA  |
-| admin    | admin123   | ADMIN   |
+```text
+backend/
+│
+├── src/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   ├── db/
+│   ├── utils/
+│   └── server.js
+│
+├── package.json
+└── Dockerfile
+```
+
+### Organización
+
+| Directorio | Responsabilidad |
+|------------|-----------------|
+| controllers | Procesamiento de solicitudes HTTP |
+| middleware | Autenticación, autorización y validaciones |
+| models | Acceso a la base de datos |
+| routes | Definición de endpoints |
+| services | Lógica de negocio y servicios auxiliares |
+| db | Conexión con PostgreSQL y Redis |
+| utils | Funciones reutilizables |
+| server.js | Punto de entrada de la aplicación |
 
 ---
 
-## Exportaciones disponibles
+## Frontend
 
-Desde el panel Admin → Reportes:
+```text
+frontend/
+│
+├── src/
+│   ├── components/
+│   ├── hooks/
+│   ├── pages/
+│   ├── services/
+│   ├── stores/
+│   ├── styles/
+│   ├── assets/
+│   ├── App.jsx
+│   └── main.jsx
+│
+├── package.json
+└── Dockerfile
+```
 
-- **Excel de ventas** — Período seleccionado con variación día a día, totales y gráfico de datos
-- **PDF de ventas** — Reporte con KPIs, tabla completa y pie de página con fecha
-- **Excel de productos** — Catálogo completo con categorías y precios
-- **Excel de auditoría** — Historial de cambios de estado con colores por tipo
+### Organización
+
+| Directorio | Responsabilidad |
+|------------|-----------------|
+| components | Componentes reutilizables |
+| hooks | Lógica reutilizable mediante Hooks |
+| pages | Vistas principales del sistema |
+| services | Comunicación con la API y Socket.io |
+| stores | Estado global mediante Zustand |
+| styles | Estilos globales y variables |
+| assets | Recursos estáticos |
 
 ---
 
-## Acceso desde red local (LAN)
+## Infraestructura
+
+```text
+docker/
+
+├── nginx/
+└── pgadmin/
+```
+
+| Directorio | Descripción |
+|------------|-------------|
+| nginx | Configuración del proxy inverso |
+| pgadmin | Configuración del administrador de PostgreSQL |
+
+---
+
+# Funcionalidades del Sistema
+
+El sistema está dividido en módulos independientes que trabajan de forma integrada mediante una arquitectura basada en eventos.
+
+---
+
+## Módulo de Autenticación
+
+Responsabilidades principales:
+
+- Inicio de sesión.
+- Cierre de sesión.
+- Gestión de sesiones.
+- Protección mediante JWT.
+- Control de acceso basado en roles.
+
+---
+
+## Módulo de Meseros
+
+Permite registrar pedidos siguiendo un flujo guiado dividido en cuatro etapas.
+
+### Flujo de trabajo
+
+```text
+Mesa
+   ↓
+
+Productos
+   ↓
+
+Confirmación
+   ↓
+
+Pedido enviado
+```
+
+Funciones disponibles:
+
+- Selección de mesa.
+- Catálogo de productos.
+- Agregado de observaciones.
+- Confirmación del pedido.
+- Envío automático a cocina.
+- Visualización de pedidos activos.
+
+---
+
+## Módulo de Cocina
+
+Administra la preparación de pedidos utilizando un tablero Kanban sincronizado en tiempo real.
+
+Estados disponibles:
+
+```text
+Pendiente
+
+↓
+
+En preparación
+
+↓
+
+Listo
+
+↓
+
+Entregado
+```
+
+Características:
+
+- Actualización inmediata.
+- Sincronización con meseros.
+- Validación de transiciones.
+- Evita cambios inválidos de estado.
+
+---
+
+## Módulo Administrativo
+
+Centraliza la administración general del restaurante.
+
+Incluye:
+
+- Dashboard ejecutivo.
+- Indicadores KPI.
+- Gestión de usuarios.
+- Gestión de productos.
+- Gestión de mesas.
+- Historial de auditoría.
+- Reportes.
+- Estadísticas de ventas.
+- Monitoreo de actividad.
+- Alertas en tiempo real.
+
+---
+
+## Reportes
+
+El sistema permite generar información para análisis operativo y toma de decisiones.
+
+Tipos de reportes:
+
+- Ventas.
+- Productos.
+- Auditoría.
+- Rendimiento.
+- Actividad de usuarios.
+
+---
+
+# Comunicación en Tiempo Real
+
+Socket.io mantiene sincronizados todos los módulos conectados al sistema.
+
+Eventos principales:
+
+- Nuevo pedido.
+- Cambio de estado.
+- Actualización de mesa.
+- Notificaciones administrativas.
+- Actualización del dashboard.
+
+La comunicación ocurre sin necesidad de recargar la aplicación.
+
+---
+
+# Exportaciones
+
+El sistema incorpora generación de documentos para consulta externa.
+
+| Formato | Información |
+|----------|-------------|
+| Excel | Reportes de ventas |
+| Excel | Catálogo de productos |
+| Excel | Auditoría |
+| PDF | Reporte de ventas |
+
+Las exportaciones incluyen formato profesional, tablas, métricas y fechas de generación.
+
+---
+
+# Comandos de Desarrollo
+
+El proyecto incorpora un conjunto de comandos para facilitar el trabajo diario durante el desarrollo.
+
+| Comando | Descripción |
+|----------|-------------|
+| make up | Inicia todos los servicios |
+| make down | Detiene los contenedores |
+| make logs | Visualiza los logs |
+| make migrate | Ejecuta migraciones |
+| make seed | Inserta datos iniciales |
+| make db-reset | Reinicia completamente la base de datos |
+| make rebuild | Reconstruye las imágenes Docker |
+| make shell-db | Accede a PostgreSQL |
+| make tools | Inicia pgAdmin y Redis Commander |
+| make clean | Elimina contenedores y volúmenes |
+| make serve-lan | Habilita acceso mediante red local |
+
+---
+
+# Acceso desde la Red Local
+
+Para habilitar el acceso desde otros dispositivos conectados a la misma red ejecutar:
 
 ```bash
 make serve-lan
-# Muestra la IP local y genera QR code en terminal
 ```
 
-Todos los dispositivos en la misma red WiFi pueden acceder con:
-`http://192.168.x.x` (IP que muestra el comando)
+El comando mostrará automáticamente la dirección IP local del servidor.
+
+Ejemplo:
+
+```text
+http://192.168.x.x
+```
+
+Todos los dispositivos conectados a la misma red podrán acceder utilizando dicha dirección.
 
 ---
 
-## comandos Make disponibles
+# Variables de Entorno
+
+El proyecto utiliza un archivo `.env` para centralizar la configuración del entorno.
+
+Entre las variables configurables se encuentran:
+
+- Puerto del backend.
+- Puerto del frontend.
+- Credenciales de PostgreSQL.
+- Configuración de Redis.
+- Clave secreta para JWT.
+- Configuración de CORS.
+- Variables de producción.
+- Configuración de Docker.
+
+No se recomienda almacenar credenciales sensibles directamente dentro del código fuente.
+
+# Seguridad Implementada
+
+El sistema incorpora múltiples mecanismos de seguridad orientados a proteger la aplicación, la información almacenada y la comunicación entre los distintos componentes.
+
+| Componente | Implementación | Propósito |
+|------------|----------------|-----------|
+| Autenticación | JSON Web Token (JWT) | Verificar la identidad de los usuarios |
+| Autorización | Role-Based Access Control (RBAC) | Restringir el acceso según el rol del usuario |
+| Contraseñas | BCrypt | Almacenamiento seguro mediante hashing |
+| Validación | Zod | Validación y sanitización de datos de entrada |
+| Protección HTTP | Helmet | Configuración de cabeceras HTTP seguras |
+| Control de solicitudes | Express Rate Limit | Prevención de ataques por fuerza bruta y abuso de la API |
+| Revocación de sesiones | Redis Blacklist | Invalidación inmediata de tokens JWT al cerrar sesión |
+| Caché | Redis | Optimización del rendimiento y reducción de consultas repetitivas |
+| CORS | Configuración personalizada | Restricción de orígenes permitidos |
+| Compresión | Compression | Optimización del tamaño de las respuestas HTTP |
+| Registro de eventos | Winston | Registro estructurado de errores y eventos del sistema |
+
+---
+
+## Seguridad de Autenticación
+
+El acceso al sistema se encuentra protegido mediante JSON Web Tokens (JWT).
+
+Características implementadas:
+
+- Inicio de sesión autenticado.
+- Generación de tokens firmados.
+- Verificación automática en cada solicitud protegida.
+- Revocación inmediata de sesiones mediante Redis.
+- Expiración automática de credenciales.
+
+---
+
+## Seguridad de Autorización
+
+El acceso a los recursos se controla mediante un modelo RBAC (Role-Based Access Control).
+
+Roles disponibles:
+
+- Administrador
+- Mesero
+- Cocina
+
+Cada endpoint verifica automáticamente que el usuario posea los permisos necesarios antes de ejecutar cualquier operación.
+
+---
+
+## Validación de Datos
+
+Todas las solicitudes recibidas por la API son validadas antes de procesarse.
+
+La validación incluye:
+
+- Tipos de datos.
+- Campos obligatorios.
+- Longitud mínima y máxima.
+- Formatos válidos.
+- Sanitización de información.
+
+Esto evita el procesamiento de datos inconsistentes o potencialmente maliciosos.
+
+---
+
+## Registro de Eventos
+
+El sistema registra automáticamente los principales eventos de ejecución.
+
+Entre ellos:
+
+- Errores internos.
+- Solicitudes fallidas.
+- Eventos críticos.
+- Actividad de la aplicación.
+
+Los registros se administran mediante Winston utilizando rotación automática de archivos.
+
+---
+
+# Pruebas Automatizadas
+
+El proyecto implementa una estrategia de desarrollo basada en Test Driven Development (TDD), garantizando que cada componente sea validado mediante pruebas automatizadas antes de integrarse al sistema.
+
+---
+
+## Resultados de Cobertura
+
+| Métrica | Resultado |
+|----------|-----------|
+| Total de pruebas | 77 |
+| Archivos evaluados | 7 |
+| Statements | 99.47 % |
+| Functions | 100 % |
+| Branches | 88.50 % |
+
+Las ramas no cubiertas corresponden a validaciones específicas del entorno de ejecución relacionadas con `localStorage` dentro de JSDOM.
+
+---
+
+## Organización de las Pruebas
+
+Las pruebas se encuentran distribuidas según la arquitectura del proyecto.
+
+| Módulo | Descripción |
+|---------|-------------|
+| Modelos | Validación de reglas de negocio |
+| Controladores | Gestión del estado de la aplicación |
+| Servicios | Comunicación mediante Socket.io |
+| Hooks | Lógica reutilizable del frontend |
+| Componentes | Comportamiento de la interfaz de usuario |
+
+---
+
+## Ciclos de Desarrollo TDD
+
+Cada módulo fue desarrollado siguiendo el ciclo clásico de Test Driven Development.
+
+| Ciclo | Componente | Cantidad de pruebas |
+|--------|------------|---------------------|
+| 1 | Máquina de estados del pedido | 20 |
+| 2 | Cocina Store | 14 |
+| 3 | Socket Handler | 8 |
+| 4 | Tarjeta de Pedido | 13 |
+| 5 | Panel de Cocina | 7 |
+| 6 | Hook de Cocina | 9 |
+| 7 | Cobertura adicional | 6 |
+
+---
+
+## Flujo de Desarrollo
+
+Cada funcionalidad sigue el siguiente proceso:
+
+```text
+Red
+│
+├── Se escribe una prueba que inicialmente falla.
+│
+▼
+
+Green
+│
+├── Se implementa el código mínimo necesario para aprobar la prueba.
+│
+▼
+
+Refactor
+│
+└── Se mejora la implementación sin modificar el comportamiento validado.
+```
+
+---
+
+## Ejecución de las Pruebas
+
+Instalar las dependencias:
 
 ```bash
-make up           # Inicia todos los servicios
-make down         # Detiene todos los servicios  
-make logs         # Ver logs en tiempo real
-make migrate      # Ejecuta migraciones SQL
-make seed         # Carga datos de prueba
-make db-reset     # Borra y recrea la BD (¡destructivo!)
-make tools        # Inicia pgAdmin + Redis Commander
-make serve-lan    # Muestra IP y QR para acceso LAN
-make shell-db     # Abre psql en PostgreSQL
-make rebuild      # Reconstruye imágenes Docker
-make clean        # Elimina volúmenes y contenedores
+npm install
+```
+
+Ejecutar todas las pruebas:
+
+```bash
+npm test
+```
+
+Modo observación:
+
+```bash
+npm run test:watch
+```
+
+Generar reporte de cobertura:
+
+```bash
+npm run coverage
 ```
 
 ---
 
-## Seguridad implementada
+# Buenas Prácticas del Proyecto
 
-- **Helmet** — Headers HTTP seguros (CSP, HSTS, X-Frame-Options...)
-- **Rate limiting** — 100 req/min general, 10 intentos de login por IP/min
-- **JWT blacklist** — Tokens revocados al hacer logout (vía Redis)
-- **Validación Zod** — Sanitización de todos los inputs del backend
-- **RBAC** — Control de roles granular por endpoint
-- **Bcrypt** — Contraseñas hasheadas con factor 10
-- **CORS** — Solo permite origen configurado
-- **Compression** — Gzip activado para todas las respuestas
+Para mantener la consistencia del código y facilitar el trabajo colaborativo se recomienda seguir las siguientes prácticas durante el desarrollo.
+
+- Mantener una separación clara entre presentación, lógica de negocio y acceso a datos.
+- Implementar componentes reutilizables siempre que sea posible.
+- Evitar duplicación de código.
+- Validar toda la información recibida desde el cliente.
+- Mantener la lógica de negocio fuera de la interfaz de usuario.
+- Utilizar nombres descriptivos para archivos, variables y funciones.
+- Documentar únicamente cuando el código no sea suficientemente expresivo.
+- Crear pruebas automatizadas para nuevas funcionalidades.
+- Mantener una estructura modular y desacoplada.
+- Utilizar ramas independientes para cada nueva característica.
 
 ---
 
-*El Fogón Criollo S.A.C. — Sistema de gestión v4.0*
+# Arquitectura de Desarrollo
+
+El proyecto adopta una arquitectura basada en responsabilidades claramente definidas.
+
+```text
+Frontend
+│
+├── Presentación
+├── Estado Global
+├── Hooks
+├── Servicios
+└── Componentes
+
+            │
+
+            ▼
+
+Backend
+│
+├── Rutas
+├── Controladores
+├── Servicios
+├── Modelos
+├── Base de Datos
+└── Middleware
+```
+
+Esta organización favorece la mantenibilidad, escalabilidad y reutilización del código.
+
+---
+
+# Próximas Mejoras
+
+La arquitectura del proyecto permite incorporar nuevas funcionalidades sin afectar los módulos existentes.
+
+Entre las mejoras previstas se consideran:
+
+- Notificaciones Push.
+- Integración con pasarelas de pago.
+- Gestión de inventario en tiempo real.
+- Modo Offline para toma de pedidos.
+- Panel analítico avanzado.
+- Reportes personalizados.
+- Integración con sistemas POS.
+- Implementación de CI/CD.
+- Despliegue automatizado en servicios cloud.
+- Monitoreo mediante métricas y observabilidad.
+
+---
+
+# Licencia
+
+Este proyecto ha sido desarrollado con fines académicos y de aprendizaje.
+
+Su estructura modular, arquitectura basada en componentes y separación de responsabilidades permiten utilizarlo como referencia para el desarrollo de aplicaciones web de gestión empresarial.
+
+---
+
+# Autores
+
+Proyecto desarrollado para la implementación de un sistema de gestión de restaurantes utilizando tecnologías modernas del ecosistema JavaScript, comunicación en tiempo real y arquitectura basada en servicios.
+
+---
+
+**El Fogón Criollo**
+
+Sistema de Gestión Integral para Restaurantes
+
+Versión 5.0

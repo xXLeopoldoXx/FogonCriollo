@@ -1,46 +1,58 @@
 {
   "name": "fogon-criollo-backend",
   "version": "2.0.0",
-  "description": "Backend API – El Fogón Criollo S.A.C. (refactored)",
+  "description": "Backend API - El Fogón Criollo S.A.C.",
   "type": "commonjs",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "jest --coverage",
-    "lint": "eslint src/ --ext .js"
+    "test": "vitest run --project backend",
+    "lint": "eslint src/ --ext .js",
+    "lint:fix": "eslint src/ --ext .js --fix"
   },
+  "keywords": [
+    "express",
+    "restaurant",
+    "backend",
+    "api",
+    "postgresql",
+    "socketio"
+  ],
+  "author": "Joseph Arnold Silvano Goyas",
+  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "bull": "^4.12.2",
+    "bull": "4.16.5",
     "compression": "^1.7.4",
     "connect-redis": "^7.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "exceljs": "^4.4.0",
-    "express": "^4.18.3",
+    "exceljs": "4.4.0",
+    "express": "^4.21.2",
     "express-rate-limit": "^7.2.0",
     "express-session": "^1.18.0",
-    "express-validator": "^7.0.1",
-    "helmet": "^7.1.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^7.2.0",
     "http-errors": "^2.0.0",
-    "ioredis": "^5.3.2",
+    "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "node-schedule": "^2.1.1",
-    "pdfkit": "^0.15.0",
-    "pg": "^8.11.3",
-    "socket.io": "^4.7.4",
-    "uuid": "^9.0.0",
-    "winston": "^3.11.0",
-    "winston-daily-rotate-file": "^4.7.1",
-    "zod": "^3.22.4"
+    "pdfkit": "^0.15.2",
+    "pg": "^8.16.3",
+    "socket.io": "^4.8.1",
+    "uuid": "^14.0.1",
+    "vite": "8.1.4",
+    "vitest": "4.1.10",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "eslint": "^8.56.0",
-    "jest": "^29.7.0",
-    "nodemon": "^3.1.0",
-    "supertest": "^6.3.4"
+    "eslint": "^8.57.1",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
   }
 }

@@ -21,6 +21,7 @@ const { setupSocketHandlers } = require('./services/socketService');
 
 const app    = express();
 const server = http.createServer(app);
+app.disable('x-powered-by');
 
 // ── Socket.io ─────────────────────────────────────────────
 const io = new Server(server, {
@@ -84,7 +85,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-app.use(compression());
+app.use(compression({ threshold: 1024 }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
@@ -102,6 +103,7 @@ app.use((req, _res, next) => {
 
 // ── Archivos estáticos de exportación ─────────────────────
 app.use('/exports', express.static(path.join(__dirname, '..', 'exports'), {
+  maxAge: '1d',
   setHeaders: (res, filePath) => {
     const ext = path.extname(filePath).toLowerCase();
     if (ext === '.xlsx') res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
