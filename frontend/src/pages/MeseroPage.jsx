@@ -15,6 +15,7 @@ import { StepProductos }    from '../components/mesero/StepProductos';
 import { StepConfirmacion } from '../components/mesero/StepConfirmacion';
 import { StepEnviado }      from '../components/mesero/StepEnviado';
 import { PedidosActivos }   from '../components/mesero/PedidosActivos';
+import { MeseroSkeleton }   from '../components/mesero/MeseroSkeleton';
 
 import styles from './MeseroPage.module.css';
 
@@ -148,19 +149,7 @@ export function MeseroPage() {
     if (prev) setPasoActual(prev);
   };
 
-  if (loading) {
-    return (
-      <div className={styles.loadingScreen}>
-        <motion.div
-          animate={{ filter: ['drop-shadow(0 0 8px rgba(232,131,74,0.5))', 'drop-shadow(0 0 24px rgba(232,131,74,1))', 'drop-shadow(0 0 8px rgba(232,131,74,0.5))'] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          <Flame size={52} color="#E8834A" />
-        </motion.div>
-        <p className={styles.loadText}>Cargando sistema...</p>
-      </div>
-    );
-  }
+  if (loading) return <MeseroSkeleton />;
 
   return (
     <div className={styles.root}>

@@ -23,6 +23,7 @@ import { ActividadUsers }  from '../components/admin/ActividadUsers';
 import { TablaAuditoria }  from '../components/admin/TablaAuditoria';
 import { ProductosAdmin }  from '../components/admin/ProductosAdmin';
 import { NotifPanel }      from '../components/admin/NotifPanel';
+import { AdminSkeleton }   from '../components/admin/AdminSkeleton';
 import styles              from './AdminPage.module.css';
 
 const NAV_ITEMS = [
@@ -187,19 +188,7 @@ export function AdminPage() {
   const alertCount = (notificaciones?.pedidos_demorados?.length ?? 0)
     + Number(notificaciones?.resumen?.en_proceso_criticos ?? 0);
 
-  if (loading) {
-    return (
-      <div className={styles.loadScreen}>
-        <motion.div
-          animate={{ filter: ['drop-shadow(0 0 8px rgba(232,131,74,0.5))', 'drop-shadow(0 0 24px rgba(232,131,74,1))', 'drop-shadow(0 0 8px rgba(232,131,74,0.5))'] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          <Flame size={52} color="#E8834A" />
-        </motion.div>
-        <p className={styles.loadText}>Cargando datos...</p>
-      </div>
-    );
-  }
+  if (loading) return <AdminSkeleton />;
 
   return (
     <div className={styles.root}>
