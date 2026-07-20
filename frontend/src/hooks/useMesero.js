@@ -1,13 +1,12 @@
-// ============================================================
-//  El Fogón Criollo — hooks/useMesero.js v2
+// El Fogón Criollo — hooks/useMesero.js v2
 //  Flujo secuencial: Mesa → Productos → Confirmación → Enviado
-// ============================================================
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
 import { connectSocket, disconnectSocket, EVENTS } from '../services/socketService';
 import toast from 'react-hot-toast';
+import { playSound } from '../utils/soundFx';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
 
@@ -49,6 +48,12 @@ async function fetchPedidosMesero(token, id_mesero) {
   return r.json();
 }
 
+async function fetchPedidosActivosMesa(token, id_mesa) {
+  const r = await fetch(`${API_BASE}/mesas/${id_mesa}/pedidos-activos`, { headers: authHeaders(token) });
+  if (!r.ok) throw new Error('Error al validar el estado de la mesa');
+  return r.json();
+}
+
 async function postPedido(token, payload) {
   const r = await fetch(`${API_BASE}/pedidos`, {
     method:  'POST',
@@ -75,6 +80,11 @@ async function patchEstado(token, id_pedido, estado) {
 const MAX_ITEMS_DISTINTOS = 15;
 const MAX_UNIDADES_ITEM   = 20;
 
+function getReservaMesa(mesa) {
+  const estado = String(mesa.estado ?? mesa.estado_mesa ?? '').toUpperCase();
+  return mesa.reservada === true || mesa.es_reservada === true || ['RESERVADA', 'RESERVED'].includes(estado);
+}
+
 // ── Hook principal ────────────────────────────────────────
 export function useMesero() {
   const { token, user } = useAuthStore();
@@ -87,6 +97,7 @@ export function useMesero() {
   const [carrito,        setCarrito]         = useState([]);
   const [ultimoPedidoId, setUltimoPedidoId] = useState(null);
   const [connected,      setConnected]       = useState(false);
+  const pedidosListosNotificados = useRef(new Set());
 
   // ── Queries ───────────────────────────────────────────
   const { data: mesas = [], isLoading: loadingMesas } = useQuery({
@@ -94,6 +105,23 @@ export function useMesero() {
     queryFn:  () => fetchMesas(token),
     staleTime: 5 * 60 * 1000,
   });
+
+  // El endpoint existente devuelve los pedidos activos de cada mesa. Así se
+  // consideran también pedidos creados por otros meseros.
+  const consultasMesas = useQueries({
+    queries: mesas.map(mesa => ({
+      queryKey: ['pedidos-activos-mesa', mesa.id_mesa],
+      queryFn: () => fetchPedidosActivosMesa(token, mesa.id_mesa),
+      enabled: !!token && !!mesa.id_mesa,
+      refetchInterval: 30_000,
+      staleTime: 15_000,
+    })),
+  });
+
+  const pedidosPorMesa = useMemo(() => mesas.reduce((acc, mesa, index) => {
+    acc[mesa.id_mesa] = consultasMesas[index]?.data;
+    return acc;
+  }, {}), [mesas, consultasMesas]);
 
   const { data: productos = [], isLoading: loadingProductos } = useQuery({
     queryKey: ['productos'],
@@ -110,7 +138,13 @@ export function useMesero() {
 
   // ── Mutation: crear pedido ────────────────────────────
   const crearPedidoMutation = useMutation({
-    mutationFn: (payload) => postPedido(token, payload),
+    mutationFn: async (payload) => {
+      const activos = await fetchPedidosActivosMesa(token, payload.id_mesa);
+      if (activos.some(pedido => pedido.estado !== 'ENTREGADO')) {
+        throw new Error('La mesa acaba de ocuparse. Elige otra mesa.');
+      }
+      return postPedido(token, payload);
+    },
     onSuccess: (data) => {
       setUltimoPedidoId(data.id_pedido);
       setPasoActual(PASOS.ENVIADO);
@@ -119,6 +153,8 @@ export function useMesero() {
         duration: 4000,
         icon: '🍗',
       });
+      playSound('success');
+      queryClient.invalidateQueries({ queryKey: ['pedidos-activos-mesa'] });
     },
     onError: (err) => {
       toast.error(err.message);
@@ -132,9 +168,14 @@ export function useMesero() {
       queryClient.setQueryData(['pedidos-mesero', id_mesero], (prev) =>
         (prev ?? []).map(p => p.id_pedido === id_pedido ? { ...p, estado: 'ENTREGADO' } : p)
       );
+      queryClient.invalidateQueries({ queryKey: ['pedidos-activos-mesa'] });
       toast.success(`Pedido #${id_pedido} entregado ✓`);
+      playSound('confirm');
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => {
+      playSound('error');
+      toast.error(err.message);
+    },
   });
 
   // ── Socket.io ─────────────────────────────────────────
@@ -147,20 +188,39 @@ export function useMesero() {
         (prev ?? []).map(p => p.id_pedido === id_pedido ? { ...p, estado } : p)
       );
       if (estado === 'LISTO') {
-        toast.success(`🔔 Pedido #${id_pedido} listo para entregar`, { duration: 6000 });
+        if (!pedidosListosNotificados.current.has(id_pedido)) {
+          pedidosListosNotificados.current.add(id_pedido);
+          toast.success(`🔔 Pedido #${id_pedido} listo para entregar`, { duration: 6000 });
+          playSound('ready');
+        }
+      } else {
+        pedidosListosNotificados.current.delete(id_pedido);
       }
+      queryClient.invalidateQueries({ queryKey: ['pedidos-activos-mesa'] });
     });
     return () => disconnectSocket();
   }, [token, id_mesero, queryClient]);
 
   // ── Navegación por pasos ──────────────────────────────
   const setMesaActiva = useCallback((mesa) => {
+    if (!Array.isArray(pedidosPorMesa[mesa.id_mesa])) {
+      toast.error('No se pudo validar el estado de la mesa. Intenta nuevamente.');
+      playSound('error');
+      return;
+    }
+    const tienePedidoActivo = (pedidosPorMesa[mesa.id_mesa] ?? []).some(pedido => pedido.estado !== 'ENTREGADO');
+    if (tienePedidoActivo || getReservaMesa(mesa)) {
+      toast.error(getReservaMesa(mesa) ? 'Esta mesa está reservada.' : 'Esta mesa tiene un pedido activo.');
+      playSound('error');
+      return;
+    }
     setMesaActivaRaw(mesa);
     if (mesa) {
       setPasoActual(PASOS.PRODUCTOS);
       setCarrito([]);
+      playSound('select');
     }
-  }, []);
+  }, [pedidosPorMesa]);
 
   const irAPaso = useCallback((paso) => {
     const indexActual = ORDEN_PASOS.indexOf(pasoActual);
@@ -250,17 +310,17 @@ export function useMesero() {
   }, [carrito]);
 
   // ── Agrupaciones ─────────────────────────────────────
-  const mesasPorPiso = mesas.reduce((acc, m) => {
+  const mesasPorPiso = useMemo(() => mesas.reduce((acc, m) => {
     const k = `Piso ${m.piso}`;
     acc[k] = acc[k] ? [...acc[k], m] : [m];
     return acc;
-  }, {});
+  }, {}), [mesas]);
 
-  const productosPorCategoria = productos.reduce((acc, p) => {
+  const productosPorCategoria = useMemo(() => productos.reduce((acc, p) => {
     const k = p.categoria ?? 'General';
     acc[k] = acc[k] ? [...acc[k], p] : [p];
     return acc;
-  }, {});
+  }, {}), [productos]);
 
   const total = carrito.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
   const totalItems = carrito.reduce((acc, i) => acc + i.cantidad, 0);
@@ -270,14 +330,16 @@ export function useMesero() {
     // Estado del flujo
     pasoActual, setPasoActual, irAPaso, reiniciar,
     // Mesa
-    mesasPorPiso, mesaActiva, setMesaActiva,
+    mesasPorPiso, pedidosPorMesa, mesaActiva, setMesaActiva,
     // Productos
     productosPorCategoria,
     // Carrito
     carrito, agregarProducto, quitarProducto, eliminarProducto,
     cambiarNota, vaciarCarrito, total, totalItems,
     // Pedidos
-    pedidos, entregarPedido: (id) => entregarMutation.mutate(id),
+    pedidos,
+    entregarPedido: entregarMutation.mutateAsync,
+    entregandoPedido: entregarMutation.isPending,
     enviarPedido, irAConfirmar,
     enviando: crearPedidoMutation.isPending,
     ultimoPedidoId,

@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    allowedHosts: [
+      'overspend-spilt-showdown.ngrok-free.dev'
+    ],
     port: 5173,
     host: true,
     proxy: {
@@ -13,7 +16,7 @@ export default defineConfig({
       },
       '/socket.io': {
         target: 'http://localhost:3000',
-        ws: true, // <-- Esto activa el puente para WebSockets
+        ws: true, 
         changeOrigin: true,
       }
     }

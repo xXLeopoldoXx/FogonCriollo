@@ -5,8 +5,7 @@
 
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '')
-  ?? 'http://localhost:3000';
+const SOCKET_URL = '/';
 
 let socket = null;
 
@@ -16,6 +15,7 @@ export function getSocket() {
       autoConnect:    false,
       reconnection:   true,
       reconnectionDelay: 1000,
+      path: '/socket.io',
     });
   }
   return socket;
@@ -35,8 +35,8 @@ export function disconnectSocket() {
 
 // Eventos emitidos por el mesero
 export const EVENTS = {
-  PEDIDO_NUEVO:    'pedido:nuevo',     // mesero → server → cocina
-  PEDIDO_ESTADO:   'pedido:estado',    // cocina → server → mesero
+  PEDIDO_NUEVO:    'pedido:nuevo',     
+  PEDIDO_ESTADO:   'pedido:estado',    
   CONNECTED:       'connect',
   DISCONNECTED:    'disconnect',
 };

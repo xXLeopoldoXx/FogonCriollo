@@ -4,48 +4,57 @@
 // ============================================================
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, MapPin, ChevronRight, Clock } from 'lucide-react';
+import { Users, MapPin, LockKeyhole } from 'lucide-react';
 import styles from './StepMesa.module.css';
 
 const ESTADO_MESA = {
   PENDIENTE:  { label: 'Ocupada',     cls: 'ocupadaPend', priority: 1 },
   EN_PROCESO: { label: 'En cocina',   cls: 'ocupadaProc', priority: 2 },
   LISTO:      { label: 'Listo',       cls: 'ocupadaList', priority: 3 },
+  PENDIENTE_PAGO: { label: 'Pago pendiente', cls: 'pendientePago', priority: 4 },
 };
 
-function getMesaEstado(id_mesa, pedidos) {
+function estaReservada(mesa) {
+  const estado = String(mesa.estado ?? mesa.estado_mesa ?? '').toUpperCase();
+  return mesa.reservada === true || mesa.es_reservada === true || ['RESERVADA', 'RESERVED'].includes(estado);
+}
+
+function getMesaEstado(pedidos) {
   const pedidosActivos = pedidos.filter(
-    p => p.id_mesa === id_mesa && p.estado !== 'ENTREGADO'
+    p => p.estado !== 'ENTREGADO'
   );
   if (!pedidosActivos.length) return null;
   // Prioridad: LISTO > EN_PROCESO > PENDIENTE
   return pedidosActivos.reduce((mayor, p) => {
-    const cfg = ESTADO_MESA[p.estado];
+    const cfg = ESTADO_MESA[p.estado] ?? ESTADO_MESA.PENDIENTE;
     if (!mayor || cfg.priority > ESTADO_MESA[mayor.estado]?.priority) return p;
     return mayor;
   }, null);
 }
 
-function MesaCard({ mesa, isActive, onSelect, pedidoActivo }) {
+function MesaCard({ mesa, isActive, onSelect, pedidoActivo, validando }) {
   const estaOcupada = !!pedidoActivo;
+  const reservada = estaReservada(mesa);
   const estadoCfg   = pedidoActivo ? ESTADO_MESA[pedidoActivo.estado] : null;
+  const bloqueada = estaOcupada || reservada || validando;
 
   return (
     <motion.button
       className={`
         ${styles.mesaCard}
         ${isActive    ? styles.mesaActive   : ''}
-        ${estaOcupada ? styles.mesaOcupada  : styles.mesaLibre}
+        ${bloqueada ? styles.mesaOcupada  : styles.mesaLibre}
       `}
       onClick={() => onSelect(mesa)}
-      whileHover={{ y: -3, scale: 1.02 }}
-      whileTap={{ scale: 0.96 }}
+      whileHover={bloqueada ? undefined : { y: -3, scale: 1.02 }}
+      whileTap={bloqueada ? undefined : { scale: 0.96 }}
       layout
+      disabled={bloqueada}
       aria-pressed={isActive}
-      aria-label={`Mesa ${mesa.numero}, piso ${mesa.piso}, capacidad ${mesa.capacidad}`}
+      aria-label={`Mesa ${mesa.numero}, piso ${mesa.piso}, ${validando ? 'validando disponibilidad' : reservada ? 'reservada' : estaOcupada ? `ocupada, ${estadoCfg?.label}` : 'libre'}, capacidad ${mesa.capacidad}`}
     >
       {/* Indicador de estado */}
-      <div className={`${styles.estadoBar} ${estadoCfg ? styles[estadoCfg.cls] : styles.libreBar}`} />
+      <div className={`${styles.estadoBar} ${reservada ? styles.reservada : estadoCfg ? styles[estadoCfg.cls] : styles.libreBar}`} />
 
       <div className={styles.mesaNum}>{mesa.numero}</div>
 
@@ -54,9 +63,10 @@ function MesaCard({ mesa, isActive, onSelect, pedidoActivo }) {
           <Users size={11} aria-hidden="true" />
           {mesa.capacidad}
         </span>
-        {estadoCfg && (
-          <span className={`${styles.estadoPill} ${styles[estadoCfg.cls]}`}>
-            {estadoCfg.label}
+        {(estadoCfg || reservada || validando) && (
+          <span className={`${styles.estadoPill} ${validando ? styles.validando : reservada ? styles.reservada : styles[estadoCfg.cls]}`}>
+            {reservada && <LockKeyhole size={10} aria-hidden="true" />}
+            {validando ? 'Validando' : reservada ? 'Reservada' : estadoCfg.label}
           </span>
         )}
       </div>
@@ -75,11 +85,11 @@ function MesaCard({ mesa, isActive, onSelect, pedidoActivo }) {
   );
 }
 
-export function StepMesa({ mesasPorPiso, mesaActiva, onSelect, pedidos = [] }) {
+export function StepMesa({ mesasPorPiso, pedidosPorMesa = {}, mesaActiva, onSelect }) {
   const pisos = Object.entries(mesasPorPiso);
   const totalMesas = pisos.reduce((s, [, ms]) => s + ms.length, 0);
   const mesasOcupadas = pisos.reduce((s, [, ms]) =>
-    s + ms.filter(m => pedidos.some(p => p.id_mesa === m.id_mesa && p.estado !== 'ENTREGADO')).length, 0
+    s + ms.filter(m => (pedidosPorMesa[m.id_mesa] ?? []).some(p => p.estado !== 'ENTREGADO') || estaReservada(m)).length, 0
   );
 
   return (
@@ -108,6 +118,12 @@ export function StepMesa({ mesasPorPiso, mesaActiva, onSelect, pedidos = [] }) {
             <span className={`${styles.leyendaDot} ${styles.dotOcupada}`} /> Ocupada
           </span>
           <span className={styles.leyendaItem}>
+            <span className={`${styles.leyendaDot} ${styles.dotReservada}`} /> Reservada
+          </span>
+          <span className={styles.leyendaItem}>
+            <span className={`${styles.leyendaDot} ${styles.dotPago}`} /> Pago pendiente
+          </span>
+          <span className={styles.leyendaItem}>
             <span className={`${styles.leyendaDot} ${styles.dotListo}`} /> Listo
           </span>
         </div>
@@ -131,7 +147,7 @@ export function StepMesa({ mesasPorPiso, mesaActiva, onSelect, pedidos = [] }) {
             <div className={styles.mesasGrid}>
               <AnimatePresence>
                 {mesas.map((mesa, i) => {
-                  const pedidoActivo = getMesaEstado(mesa.id_mesa, pedidos);
+                  const pedidoActivo = getMesaEstado(pedidosPorMesa[mesa.id_mesa] ?? []);
                   return (
                     <motion.div
                       key={mesa.id_mesa}
@@ -144,6 +160,7 @@ export function StepMesa({ mesasPorPiso, mesaActiva, onSelect, pedidos = [] }) {
                         isActive={mesaActiva?.id_mesa === mesa.id_mesa}
                         onSelect={onSelect}
                         pedidoActivo={pedidoActivo}
+                        validando={!Array.isArray(pedidosPorMesa[mesa.id_mesa])}
                       />
                     </motion.div>
                   );
@@ -154,34 +171,6 @@ export function StepMesa({ mesasPorPiso, mesaActiva, onSelect, pedidos = [] }) {
         ))}
       </div>
 
-      {/* CTA cuando hay mesa seleccionada */}
-      <AnimatePresence>
-        {mesaActiva && (
-          <motion.div
-            className={styles.ctaBar}
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          >
-            <div className={styles.ctaInfo}>
-              <span className={styles.ctaMesa}>Mesa {mesaActiva.numero}</span>
-              <span className={styles.ctaSub}>
-                Piso {mesaActiva.piso} · {mesaActiva.capacidad} personas
-              </span>
-            </div>
-            <motion.button
-              className={styles.ctaBtn}
-              onClick={() => onSelect(mesaActiva)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Ir a la carta
-              <ChevronRight size={18} />
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

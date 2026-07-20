@@ -3,10 +3,11 @@
 //  Paso 4: confirmación de éxito con link para el cliente
 // ============================================================
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Copy, Check, PlusCircle, ExternalLink } from 'lucide-react';
+import { CheckCircle, PlusCircle, QrCode } from 'lucide-react';
 import styles from './StepEnviado.module.css';
+import { QRCodeSVG } from './QRCodeSVG.jsx';
 
 function Particle({ x, y, color, size }) {
   return (
@@ -29,7 +30,6 @@ function Particle({ x, y, color, size }) {
 const COLORS = ['#C85A1A', '#F2A74B', '#4CAF50', '#5BA4F5', '#CE93D8', '#F5EDD8'];
 
 export function StepEnviado({ idPedido, mesa, total, onNuevoPedido }) {
-  const [copiado, setCopiado] = useState(false);
   const [particles, setParticles] = useState([]);
   const clienteUrl = idPedido
     ? `${window.location.origin}/cliente/${idPedido}`
@@ -49,17 +49,6 @@ export function StepEnviado({ idPedido, mesa, total, onNuevoPedido }) {
     const t = setTimeout(() => setParticles([]), 3000);
     return () => clearTimeout(t);
   }, []);
-
-  async function copiarLink() {
-    if (!clienteUrl) return;
-    try {
-      await navigator.clipboard.writeText(clienteUrl);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2500);
-    } catch {
-      window.open(clienteUrl, '_blank');
-    }
-  }
 
   return (
     <div className={styles.root}>
@@ -102,44 +91,22 @@ export function StepEnviado({ idPedido, mesa, total, onNuevoPedido }) {
           </p>
         )}
       </motion.div>
-
-      {/* Link para el cliente */}
+      
+      {/* QR para el cliente: evita copiar y compartir enlaces manualmente. */}
       {clienteUrl && (
         <motion.div
-          className={styles.linkCard}
+          className={styles.qrCard}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <p className={styles.linkTitle}>🔗 Enlace de seguimiento para el cliente</p>
-          <p className={styles.linkDesc}>
-            El cliente puede ver el estado de su pedido en tiempo real.
-          </p>
-          <div className={styles.linkRow}>
-            <div className={styles.linkUrl}>
-              {`/cliente/${idPedido}`}
-            </div>
-            <motion.button
-              className={`${styles.copyBtn} ${copiado ? styles.copyBtnOk : ''}`}
-              onClick={copiarLink}
-              whileTap={{ scale: 0.93 }}
-            >
-              {copiado
-                ? <><Check size={14} /> Copiado</>
-                : <><Copy size={14} /> Copiar</>
-              }
-            </motion.button>
-            <motion.a
-              href={clienteUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.openBtn}
-              whileTap={{ scale: 0.93 }}
-              aria-label="Abrir enlace de seguimiento en nueva pestaña"
-            >
-              <ExternalLink size={14} />
-            </motion.a>
+          <QrCode size={20} aria-hidden="true" />
+          <div className={styles.qrInfo}>
+            <h3>Seguimiento para el cliente</h3>
+            <p>El cliente escanea este código para ver el estado del pedido en tiempo real.</p>
           </div>
+          <QRCodeSVG value={clienteUrl} size={180} className={styles.qrCode} />
+          <span className={styles.qrCodeText}>Pedido #{idPedido}</span>
         </motion.div>
       )}
 

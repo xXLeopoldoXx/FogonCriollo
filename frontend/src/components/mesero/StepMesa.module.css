@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding-bottom: 100px; /* espacio para la CTA bar flotante */
+  padding-bottom: 24px;
 }
 
 /* ── Header ───────────────────────────────────────────── */
@@ -12,17 +12,20 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 24px 28px 20px;
+  padding: 24px 28px 18px;
   border-bottom: 1px solid var(--border-subtle);
   flex-wrap: wrap;
 }
 
 .headerIcon {
-  width: 52px; height: 52px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-md);
-  background: rgba(200,90,26,0.12);
+  background: rgba(200, 90, 26, 0.12);
   border: 1px solid var(--border-base);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--ember);
   flex-shrink: 0;
 }
@@ -31,18 +34,22 @@
   font-size: var(--text-2xl);
   color: var(--text-primary);
 }
+
 .subtitle {
   font-size: var(--text-sm);
   color: var(--text-tertiary);
   margin-top: 2px;
 }
 
+/* Leyenda de estados */
 .leyenda {
   margin-left: auto;
   display: flex;
   gap: 16px;
   align-items: center;
+  flex-wrap: wrap;
 }
+
 .leyendaItem {
   display: flex;
   align-items: center;
@@ -51,16 +58,21 @@
   color: var(--text-tertiary);
   letter-spacing: 0.3px;
 }
+
 .leyendaDot {
-  width: 8px; height: 8px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.dotLibre   { background: rgba(255,255,255,0.2); }
+
+.dotLibre   { background: rgba(255, 255, 255, 0.2); }
 .dotOcupada { background: #F2A74B; }
 .dotListo   { background: #4CAF50; }
+.dotReservada { background: #CE93D8; }
+.dotPago { background: #CE93D8; box-shadow: 0 0 0 2px rgba(206,147,216,0.18); }
 
-/* ── Pisos ────────────────────────────────────────────── */
+/* ── Pisos y Secciones ─────────────────────────────────── */
 .pisos {
   display: flex;
   flex-direction: column;
@@ -78,68 +90,87 @@
   gap: 10px;
   margin-bottom: 14px;
 }
+
 .pisoLabel {
-  font-size: var(--text-sm);
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--text-secondary);
   font-family: var(--font-body);
+  margin-bottom: 12px;
 }
+
 .pisoCont {
   font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
+/* Grilla de mesas */
 .mesasGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
 }
 
-/* ── Mesa card ────────────────────────────────────────── */
+/* ── Tarjeta de Mesa ──────────────────────────────────── */
 .mesaCard {
   position: relative;
   border-radius: var(--radius-md);
-  padding: 14px 10px 12px;
+  padding: 14px 10px;
+  min-height: 96px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   border: 1px solid var(--border-subtle);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  overflow: hidden;
   background: var(--bg-card);
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow: hidden;
+  transition: all var(--transition-fast);
 }
 
+/* Indicador superior de estado */
 .estadoBar {
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 3px;
   border-radius: 2px 2px 0 0;
 }
-.libreBar    { background: rgba(255,255,255,0.08); }
+
+.libreBar    { background: rgba(255, 255, 255, 0.08); }
 .ocupadaPend { background: #F2A74B; }
 .ocupadaProc { background: #5BA4F5; }
 .ocupadaList { background: #4CAF50; }
+.pendientePago { background: #CE93D8; }
 
+/* Estados de mesa */
 .mesaLibre {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
 }
+
 .mesaLibre:hover {
   border-color: var(--border-strong);
-  background: rgba(200,90,26,0.06);
+  background: rgba(200, 90, 26, 0.06);
 }
 
 .mesaOcupada {
-  background: rgba(242,167,75,0.04);
-  border-color: rgba(242,167,75,0.2);
+  background: rgba(242, 167, 75, 0.04);
+  border-color: rgba(242, 167, 75, 0.2);
+}
+.mesaCard:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 .mesaActive {
   border-color: var(--brand) !important;
-  background: rgba(200,90,26,0.12) !important;
-  box-shadow: 0 0 0 2px rgba(200,90,26,0.2), var(--shadow-glow);
+  background: rgba(200, 90, 26, 0.14) !important;
+  box-shadow: 0 0 16px rgba(200, 90, 26, 0.25), var(--shadow-glow);
 }
 
 .mesaNum {
@@ -156,6 +187,7 @@
   align-items: center;
   gap: 4px;
 }
+
 .mesaCap {
   display: flex;
   align-items: center;
@@ -173,73 +205,61 @@
   padding: 2px 6px;
   border-radius: var(--radius-full);
 }
-.ocupadaPend { color: #F2A74B; background: rgba(242,167,75,0.12); }
-.ocupadaProc { color: #5BA4F5; background: rgba(91,164,245,0.12); }
-.ocupadaList { color: #4CAF50; background: rgba(76,175,80,0.12); }
+
+.ocupadaPend { color: #F2A74B; background: rgba(242, 167, 75, 0.12); }
+.ocupadaProc { color: #5BA4F5; background: rgba(91, 164, 245, 0.12); }
+.ocupadaList { color: #4CAF50; background: rgba(76, 175, 80, 0.12); }
+.pendientePago { color: #CE93D8; background: rgba(206, 147, 216, 0.14); }
+.reservada { color: #CE93D8; background: rgba(206, 147, 216, 0.14); }
+.validando { color: var(--text-tertiary); background: rgba(255,255,255,0.08); }
+.estadoPill.reservada { display: inline-flex; align-items: center; gap: 4px; }
 
 .selectedCheck {
   position: absolute;
-  top: 8px; right: 8px;
-  width: 18px; height: 18px;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--brand);
   color: white;
   font-size: 10px;
   font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
-
-/* ── CTA bar flotante ─────────────────────────────────── */
-.ctaBar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 300px; /* evitar sidebar */
-  z-index: var(--z-overlay);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 28px;
-  background: linear-gradient(to top, var(--carbon-950) 80%, transparent);
-  border-top: 1px solid var(--border-base);
+  justify-content: center;
 }
 
-.ctaInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.ctaMesa {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-.ctaSub {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
-}
-
-.ctaBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 13px 28px;
-  background: linear-gradient(135deg, var(--brand), var(--brand-600));
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: white;
-  box-shadow: var(--shadow-glow);
-  letter-spacing: 0.3px;
-  transition: box-shadow var(--transition-fast);
-}
-.ctaBtn:hover {
-  box-shadow: 0 6px 28px rgba(200,90,26,0.55);
-}
-
+/* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 900px) {
-  .ctaBar { right: 0; }
-  .mesasGrid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+  .mesasGrid {
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  }
+  .header {
+    padding: 16px;
+  }
+  .pisoSection {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .root {
+    padding-bottom: 16px;
+  }
+  .mesasGrid {
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 8px;
+  }
+  .mesaCard {
+    padding: 10px 6px;
+    min-height: 80px;
+  }
+  .mesaNum {
+    font-size: 22px;
+  }
+  .leyenda {
+    margin-left: 0;
+    gap: 10px;
+  }
 }

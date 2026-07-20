@@ -112,7 +112,7 @@
   text-align: center;
 }
 .quitarBtn, .eliminarBtn {
-  width: 28px; height: 28px;
+  width: 40px; height: 40px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   background: rgba(255,255,255,0.04);
@@ -120,6 +120,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 16px;
   transition: all var(--transition-fast);
+  touch-action: manipulation;
 }
 .quitarBtn:hover  { background: rgba(200,90,26,0.2); color: var(--ember); }
 .eliminarBtn:hover { background: rgba(239,83,80,0.15); color: var(--error); border-color: rgba(239,83,80,0.4); }
@@ -133,7 +134,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 2px 0;
+  padding: 4px 0;
   transition: color var(--transition-fast);
   text-align: left;
   max-width: 100%;
@@ -204,14 +205,17 @@
 .volverBtn, .volverBtn2 {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 12px 18px;
+  min-height: 48px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   color: var(--text-secondary);
   background: rgba(255,255,255,0.04);
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 .volverBtn:hover, .volverBtn2:hover {
   border-color: var(--border-strong);
@@ -224,6 +228,7 @@
   justify-content: center;
   gap: 8px;
   padding: 14px 24px;
+  min-height: 48px;
   background: linear-gradient(135deg, var(--brand), var(--brand-600));
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
@@ -246,4 +251,22 @@
   font-size: 11px;
   color: var(--text-muted);
   text-align: center;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 640px) {
+  .root { padding: 18px 16px 28px; gap: 16px; }
+  .item { grid-template-columns: 52px 1fr; gap: 10px; padding: 10px; }
+  .itemImg { width: 52px; height: 48px; }
+  .itemActions { gap: 4px; }
+  .itemCant { min-width: 18px; }
+}
+
+@media (max-width: 380px) {
+  .footerBtns {
+    grid-template-columns: 1fr;
+  }
+  .volverBtn2 { order: 2; }
+  .enviarBtn { order: 1; }
+  .header { flex-direction: column; align-items: flex-start; gap: 8px; }
 }

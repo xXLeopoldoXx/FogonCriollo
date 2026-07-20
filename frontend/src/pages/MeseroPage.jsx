@@ -1,10 +1,11 @@
 // ============================================================
-//  El Fogón Criollo — MeseroPage v2
+//  El Fogón Criollo — MeseroPage v2 (mobile-first)
 //  Flujo secuencial con Framer Motion y microanimaciones
 // ============================================================
 
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Flame, Wifi, WifiOff, LogOut, ChevronLeft } from 'lucide-react';
+import { Flame, Wifi, WifiOff, LogOut, ChevronLeft, BellRing, X } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from '../stores/authStore';
 import { useMesero, PASOS } from '../hooks/useMesero';
@@ -16,6 +17,7 @@ import { StepConfirmacion } from '../components/mesero/StepConfirmacion';
 import { StepEnviado }      from '../components/mesero/StepEnviado';
 import { PedidosActivos }   from '../components/mesero/PedidosActivos';
 import { MeseroSkeleton }   from '../components/mesero/MeseroSkeleton';
+import { playSound } from '../utils/soundFx';
 
 import styles from './MeseroPage.module.css';
 
@@ -42,7 +44,7 @@ function FlowStepper({ pasoActual, mesaActiva, totalItems, onBack }) {
           whileTap={{ scale: 0.94 }}
           aria-label="Volver al paso anterior"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={18} />
         </motion.button>
       )}
 
@@ -129,15 +131,17 @@ export function MeseroPage() {
   const mesero = useMesero();
   const {
     pasoActual, setPasoActual, irAPaso, reiniciar,
-    mesasPorPiso, mesaActiva, setMesaActiva,
+    mesasPorPiso, pedidosPorMesa, mesaActiva, setMesaActiva,
     productosPorCategoria,
     carrito, agregarProducto, quitarProducto, eliminarProducto,
     cambiarNota, total, totalItems,
-    pedidos, entregarPedido,
+    pedidos, entregarPedido, entregandoPedido,
     enviarPedido, irAConfirmar,
     enviando, ultimoPedidoId,
     loading, connected,
   } = mesero;
+
+  const [pedidosDrawerOpen, setPedidosDrawerOpen] = useState(false);
 
   const pasoIndex = Object.keys(PASOS).indexOf(pasoActual.toUpperCase());
 
@@ -151,10 +155,13 @@ export function MeseroPage() {
 
   if (loading) return <MeseroSkeleton />;
 
+  const pedidosActivosCount = pedidos.filter(p => p.estado !== 'ENTREGADO').length;
+  const pedidosListosCount = pedidos.filter(p => p.estado === 'LISTO').length;
+
   return (
     <div className={styles.root}>
       <Toaster
-        position="top-right"
+        position="top-center"
         toastOptions={{
           style: {
             background: '#2A190C',
@@ -192,6 +199,22 @@ export function MeseroPage() {
         </div>
 
         <div className={styles.topRight}>
+          {pasoActual !== PASOS.ENVIADO && (
+            <motion.button
+              className={`${styles.pedidosMobileTrigger} ${pedidosListosCount > 0 ? styles.pedidosMobileTriggerAlert : ''}`}
+              onClick={() => {
+                playSound('select');
+                setPedidosDrawerOpen(true);
+              }}
+              whileTap={{ scale: 0.92 }}
+              aria-label={`Ver mis pedidos activos${pedidosActivosCount ? `, ${pedidosActivosCount} pedidos` : ''}`}
+              aria-expanded={pedidosDrawerOpen}
+              aria-controls="panel-pedidos-mesero"
+            >
+              <BellRing size={18} aria-hidden="true" />
+              {pedidosActivosCount > 0 && <span className={styles.mobilePedidosBadge}>{pedidosActivosCount}</span>}
+            </motion.button>
+          )}
           <div className={`${styles.connPill} ${connected ? styles.connOnline : styles.connOffline}`}>
             {connected
               ? <><Wifi size={12} /> En línea</>
@@ -237,7 +260,7 @@ export function MeseroPage() {
                   mesasPorPiso={mesasPorPiso}
                   mesaActiva={mesaActiva}
                   onSelect={setMesaActiva}
-                  pedidos={pedidos}
+                  pedidosPorMesa={pedidosPorMesa}
                 />
               </motion.div>
             )}
@@ -309,21 +332,45 @@ export function MeseroPage() {
           </AnimatePresence>
         </div>
 
-        {/* Panel lateral de pedidos activos — siempre visible */}
+        {/* Panel lateral de pedidos activos — desktop: fijo / móvil: drawer */}
         {pasoActual !== PASOS.ENVIADO && (
           <motion.aside
-            className={styles.sidebar}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            id="panel-pedidos-mesero"
+            className={`${styles.sidebar} ${pedidosDrawerOpen ? styles.sidebarOpen : ''}`}
+            initial={false}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
+            <div className={styles.drawerHandle} aria-hidden="true" />
+            <button
+              className={styles.sidebarCloseBtn}
+              onClick={() => setPedidosDrawerOpen(false)}
+              aria-label="Cerrar panel de pedidos"
+            >
+              <X size={18} />
+            </button>
             <PedidosActivos
               pedidos={pedidos}
               onEntregar={entregarPedido}
+              entregando={entregandoPedido}
             />
           </motion.aside>
         )}
       </main>
+
+      {/* Backdrop del drawer móvil */}
+      <AnimatePresence>
+        {pedidosDrawerOpen && (
+          <motion.div
+            className={styles.sidebarBackdrop}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPedidosDrawerOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

@@ -3,42 +3,22 @@
 //  Panel lateral con pedidos del mesero en tiempo real
 // ============================================================
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Link2, Check, Clock } from 'lucide-react';
+import { CheckCircle, Clock, QrCode, X, AlertTriangle, Unlock, ReceiptText } from 'lucide-react';
 import styles from './PedidosActivos.module.css';
+import { QRCodeSVG } from './QRCodeSVG';
 
 const ESTADO_CFG = {
   PENDIENTE:  { label: 'Enviado',   cls: 'pend', step: 0 },
   EN_PROCESO: { label: 'En cocina', cls: 'proc', step: 1 },
   LISTO:      { label: 'Listo ✓',   cls: 'list', step: 2 },
+  PENDIENTE_PAGO: { label: 'Pago pendiente', cls: 'pay', step: 2 },
   ENTREGADO:  { label: 'Entregado', cls: 'entr', step: 3 },
 };
 
-function useTiempo(fechaHora) {
-  const [txt, setTxt] = useState('');
-  // usamos useEffect solo si hay fechaHora
-  if (fechaHora && !txt) {
-    const s = Math.floor((Date.now() - new Date(fechaHora)) / 1000);
-    if (s < 60) setTxt(`${s}s`);
-    else if (s < 3600) setTxt(`${Math.floor(s / 60)}min`);
-    else setTxt(`${Math.floor(s / 3600)}h`);
-  }
-  return txt;
-}
-
-function PedidoCard({ pedido, onEntregar }) {
-  const [copiado, setCopiado] = useState(false);
+function PedidoCard({ pedido, onSolicitarEntrega, onMostrarQr }) {
   const cfg  = ESTADO_CFG[pedido.estado] ?? ESTADO_CFG.PENDIENTE;
-  const url  = `${window.location.origin}/cliente/${pedido.id_pedido}`;
-
-  async function copiarLink() {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2200);
-    } catch { window.open(url, '_blank'); }
-  }
 
   return (
     <motion.div
@@ -96,16 +76,16 @@ function PedidoCard({ pedido, onEntregar }) {
       {pedido.estado !== 'ENTREGADO' && (
         <div className={styles.actions}>
           <button
-            className={`${styles.linkBtn} ${copiado ? styles.linkBtnOk : ''}`}
-            onClick={copiarLink}
-            title="Copiar enlace de seguimiento"
+            className={styles.qrBtn}
+            onClick={() => onMostrarQr(pedido)}
+            title="Mostrar código QR de seguimiento"
           >
-            {copiado ? <><Check size={11} /> Copiado</> : <><Link2 size={11} /> Link cliente</>}
+            <QrCode size={14} /> QR cliente
           </button>
           {pedido.estado === 'LISTO' && (
             <motion.button
               className={styles.entregarBtn}
-              onClick={() => onEntregar(pedido.id_pedido)}
+              onClick={() => onSolicitarEntrega(pedido)}
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ duration: 1.2, repeat: Infinity }}
               whileTap={{ scale: 0.95 }}
@@ -120,9 +100,81 @@ function PedidoCard({ pedido, onEntregar }) {
   );
 }
 
-export function PedidosActivos({ pedidos = [], onEntregar }) {
+function ModalLiberarMesa({ pedido, pedidosPendientes, onCancelar, onConfirmar, enviando }) {
+  useEffect(() => {
+    const onKeyDown = event => {
+      if (event.key === 'Escape' && !enviando) onCancelar();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [enviando, onCancelar]);
+
+  return (
+    <motion.div
+      className={styles.modalBackdrop}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={enviando ? undefined : onCancelar}
+    >
+      <motion.section
+        className={styles.liberarModal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="liberar-mesa-title"
+        initial={{ opacity: 0, scale: 0.94, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 20 }}
+        onClick={event => event.stopPropagation()}
+      >
+        <div className={styles.modalIcon}><Unlock size={24} /></div>
+        <h4 id="liberar-mesa-title">¿Entregar y liberar la mesa?</h4>
+        <p className={styles.modalMesa}>Pedido #{pedido.id_pedido} · Mesa {pedido.numero_mesa} · Piso {pedido.piso}</p>
+        <div className={styles.modalInfo}>
+          <ReceiptText size={17} aria-hidden="true" />
+          <span>El pedido se marcará como entregado y la mesa volverá a estar disponible.</span>
+        </div>
+        {pedidosPendientes.length > 0 && (
+          <div className={styles.modalWarning} role="alert">
+            <AlertTriangle size={17} aria-hidden="true" />
+            <span>Hay {pedidosPendientes.length} pedido{pedidosPendientes.length > 1 ? 's' : ''} activo{pedidosPendientes.length > 1 ? 's' : ''} adicional{pedidosPendientes.length > 1 ? 'es' : ''} en esta mesa. No se liberará hasta que terminen.</span>
+          </div>
+        )}
+        <div className={styles.modalActions}>
+          <button className={styles.cancelBtn} onClick={onCancelar} disabled={enviando}>Cancelar</button>
+          <button className={styles.confirmBtn} onClick={onConfirmar} disabled={enviando}>
+            <CheckCircle size={17} /> {enviando ? 'Confirmando…' : 'Sí, entregar'}
+          </button>
+        </div>
+      </motion.section>
+    </motion.div>
+  );
+}
+
+export function PedidosActivos({ pedidos = [], onEntregar, entregando = false }) {
+  const [pedidoQr, setPedidoQr] = useState(null);
+  const [pedidoALiberar, setPedidoALiberar] = useState(null);
   const activos = pedidos.filter(p => p.estado !== 'ENTREGADO');
   const listos  = activos.filter(p => p.estado === 'LISTO').length;
+  const clienteUrl = pedidoQr ? `${window.location.origin}/cliente/${pedidoQr.id_pedido}` : '';
+  const pedidosPendientes = useMemo(() => {
+    if (!pedidoALiberar) return [];
+    return activos.filter(p =>
+      p.id_pedido !== pedidoALiberar.id_pedido
+      && p.numero_mesa === pedidoALiberar.numero_mesa
+      && p.piso === pedidoALiberar.piso
+    );
+  }, [activos, pedidoALiberar]);
+
+  async function confirmarEntrega() {
+    if (!pedidoALiberar) return;
+    try {
+      await onEntregar(pedidoALiberar.id_pedido);
+      setPedidoALiberar(null);
+    } catch {
+      // La mutación ya informa el error al mesero mediante toast.
+    }
+  }
 
   return (
     <div className={styles.root}>
@@ -158,12 +210,54 @@ export function PedidosActivos({ pedidos = [], onEntregar }) {
               <PedidoCard
                 key={p.id_pedido}
                 pedido={p}
-                onEntregar={onEntregar}
+                onSolicitarEntrega={setPedidoALiberar}
+                onMostrarQr={setPedidoQr}
               />
             ))
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {pedidoALiberar && (
+          <ModalLiberarMesa
+            pedido={pedidoALiberar}
+            pedidosPendientes={pedidosPendientes}
+            onCancelar={() => setPedidoALiberar(null)}
+            onConfirmar={confirmarEntrega}
+            enviando={entregando}
+          />
+        )}
+        {pedidoQr && (
+          <motion.div
+            className={styles.qrModalBackdrop}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPedidoQr(null)}
+          >
+            <motion.section
+              className={styles.qrModal}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="qr-modal-title"
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              onClick={event => event.stopPropagation()}
+            >
+              <button className={styles.qrCloseBtn} onClick={() => setPedidoQr(null)} aria-label="Cerrar código QR">
+                <X size={18} />
+              </button>
+              <QrCode size={22} className={styles.qrModalIcon} aria-hidden="true" />
+              <h4 id="qr-modal-title">Seguimiento del pedido</h4>
+              <p>Mesa {pedidoQr.numero_mesa}: el cliente escanea el código para consultar su pedido.</p>
+              <QRCodeSVG value={clienteUrl} size={200} className={styles.qrImage} />
+              <span>Pedido #{pedidoQr.id_pedido}</span>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

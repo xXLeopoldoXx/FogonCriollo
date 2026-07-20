@@ -2,31 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, MessageSquare, Timer, AlertTriangle } from 'lucide-react';
 import { getNextEstado } from '../../models/pedidoStateMachine';
+import { playSound } from '../../utils/soundFx';
 import styles from './TarjetaPedido.module.css';
-
-function playTone(type = 'new') {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (type === 'new') {
-      const osc = ctx.createOscillator(); const g = ctx.createGain();
-      osc.connect(g); g.connect(ctx.destination);
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15);
-      g.gain.setValueAtTime(0.25, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.45);
-    } else {
-      [0, 0.12, 0.24].forEach((t, i) => {
-        const o = ctx.createOscillator(); const gn = ctx.createGain();
-        o.connect(gn); gn.connect(ctx.destination);
-        o.frequency.value = [523, 659, 784][i];
-        gn.gain.setValueAtTime(0.2, ctx.currentTime + t);
-        gn.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.2);
-        o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2);
-      });
-    }
-  } catch {}
-}
 
 const ESTADO_CFG = {
   PENDIENTE:  { label:'Nuevo',      accion:'Iniciar',      cls:'pendiente', audio:'new' },
@@ -63,7 +40,7 @@ export function TarjetaPedido({ pedido, onAvanzar, isNuevo, loading = false }) {
   const confirmRef = useRef(null);
   const items = typeof pedido.items === 'string' ? JSON.parse(pedido.items) : (pedido.items ?? []);
 
-  useEffect(() => { if (isNuevo) playTone('new'); }, [isNuevo]);
+  useEffect(() => { if (isNuevo) playSound('newOrder'); }, [isNuevo]);
 
   useEffect(() => {
     if (!confirmando) return;
@@ -76,7 +53,7 @@ export function TarjetaPedido({ pedido, onAvanzar, isNuevo, loading = false }) {
     if (loading) return;
     if (!confirmando) { setConfirmando(true); return; }
     setConfirmando(false);
-    if (cfg.audio) playTone(cfg.audio);
+    if (cfg.audio) playSound('confirm');
     onAvanzar(pedido.id_pedido, getNextEstado(pedido.estado));
   }
 
