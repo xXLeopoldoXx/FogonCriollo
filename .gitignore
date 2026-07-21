@@ -17,6 +17,7 @@ data/postgres/
 data/redis/
 data/pgadmin/
 data/certbot/
+data/backups/
 
 # Exportaciones generadas
 backend/exports/

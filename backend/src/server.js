@@ -18,6 +18,7 @@ const { redis }   = require('./db/redis');
 const routes      = require('./routes');
 const logger      = require('./utils/logger');
 const { setupSocketHandlers } = require('./services/socketService');
+const { iniciarCronJobs } = require('./cron');
 
 const app    = express();
 const server = http.createServer(app);
@@ -175,6 +176,8 @@ server.listen(PORT, '0.0.0.0', async () => {
   } catch (err) {
     logger.warn('✗ Redis no disponible (modo sin caché)', { error: err.message });
   }
+
+  iniciarCronJobs();
 });
 
 // Graceful shutdown

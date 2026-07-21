@@ -5,7 +5,10 @@ const logger        = require('../utils/logger');
 
 async function getMesas(req, res) {
   try { res.json(await mesaModel.getAll()); }
-  catch (err) { res.status(500).json({ message: 'Error al obtener mesas.' }); }
+  catch (err) {
+    logger.error('Error al obtener mesas', { error: err.message });
+    res.status(500).json({ message: 'Error al obtener mesas.' });
+  }
 }
 
 async function getProductos(req, res) {
@@ -13,7 +16,10 @@ async function getProductos(req, res) {
     await pedidoModel.ensureExtras();
     const soloDisponibles = req.query.disponible === 'true';
     res.json(await productoModel.getAll(soloDisponibles));
-  } catch (err) { res.status(500).json({ message: 'Error al obtener productos.' }); }
+  } catch (err) {
+    logger.error('Error al obtener productos', { error: err.message });
+    res.status(500).json({ message: 'Error al obtener productos.' });
+  }
 }
 
 async function crearPedido(req, res) {
@@ -56,14 +62,20 @@ async function crearPedido(req, res) {
 async function getPedidosMesero(req, res) {
   const { id_mesero } = req.params;
   try { res.json(await pedidoModel.getPorMesero(id_mesero)); }
-  catch (err) { res.status(500).json({ message: 'Error al obtener pedidos.' }); }
+  catch (err) {
+    logger.error('Error al obtener pedidos del mesero', { error: err.message, id_mesero: req.params.id_mesero });
+    res.status(500).json({ message: 'Error al obtener pedidos.' });
+  }
 }
 
 async function getPedidosCocina(req, res) {
   try {
     await pedidoModel.ensureExtras();
     res.json(await pedidoModel.getCocinaActivos());
-  } catch (err) { res.status(500).json({ message: 'Error al obtener pedidos de cocina.' }); }
+  } catch (err) {
+    logger.error('Error al obtener pedidos de cocina', { error: err.message });
+    res.status(500).json({ message: 'Error al obtener pedidos de cocina.' });
+  }
 }
 
 async function cambiarEstado(req, res) {
@@ -109,12 +121,18 @@ async function getClientePedido(req, res) {
     const pedido = await pedidoModel.getClientePedido(id);
     if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado.' });
     res.json(pedido);
-  } catch (err) { res.status(500).json({ message: 'Error al obtener el pedido.' }); }
+  } catch (err) {
+    logger.error('Error al obtener el pedido del cliente', { error: err.message, id: req.params.id });
+    res.status(500).json({ message: 'Error al obtener el pedido.' });
+  }
 }
 
 async function getClienteEspera(_req, res) {
   try { res.json(await pedidoModel.getClienteEspera()); }
-  catch (err) { res.status(500).json({ message: 'Error al obtener la lista de espera.' }); }
+  catch (err) {
+    logger.error('Error al obtener la lista de espera', { error: err.message });
+    res.status(500).json({ message: 'Error al obtener la lista de espera.' });
+  }
 }
 
 async function getAdminProductos(_req, res) {

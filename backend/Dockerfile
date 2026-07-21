@@ -5,7 +5,7 @@
 
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache wget curl
+RUN apk add --no-cache wget curl postgresql17-client
 
 # ── Dependencias ─────────────────────────────────────────
 FROM base AS deps

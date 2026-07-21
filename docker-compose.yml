@@ -68,6 +68,7 @@ services:
       - ./backend:/app
       - /app/node_modules
       - ./data/exports:/app/exports
+      - ./data/backups:/app/backups
     ports:
       - "3000:3000"
     depends_on:
