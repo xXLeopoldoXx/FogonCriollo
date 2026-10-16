@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 import { getSocket, EVENTS } from "../services/socketService";
 import styles from './ClientePage.module.css';
 
-const SOCKET_URL = window.location.origin; 
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL ?? window.location.origin).replace(/\/api$/, '');
 
 async function getClienteEspera() {
   const r = await fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/pedidos/cliente/espera`);

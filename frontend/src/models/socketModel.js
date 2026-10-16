@@ -5,7 +5,7 @@
 
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = '/';
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL ?? '/').replace(/\/api$/, '');
 
 let socket = null;
 

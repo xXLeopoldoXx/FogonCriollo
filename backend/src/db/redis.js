@@ -21,7 +21,35 @@ const redisConfig = {
   },
 };
 
-const redis = new Redis(redisConfig);
+// Sin Redis (p. ej. despliegue gratuito): REDIS_DISABLED=true usa un almacén en memoria.
+// REDIS_URL (Upstash, rediss://...) tiene prioridad sobre REDIS_HOST/PORT.
+function createMemoryRedis() {
+  const store = new Map();
+  const live = (k) => {
+    const e = store.get(k);
+    if (e && e.exp && e.exp < Date.now()) { store.delete(k); return null; }
+    return e ?? null;
+  };
+  return {
+    on() {},
+    async ping() { return 'PONG'; },
+    async get(k) { return live(k)?.v ?? null; },
+    async setex(k, ttl, v) { store.set(k, { v, exp: Date.now() + ttl * 1000 }); return 'OK'; },
+    async del(...ks) { ks.forEach((k) => store.delete(k)); return ks.length; },
+    async keys(pattern) {
+      const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+      const re = new RegExp(`^${escaped}$`);
+      return [...store.keys()].filter((k) => live(k) && re.test(k));
+    },
+    disconnect() {},
+  };
+}
+
+const redis = process.env.REDIS_DISABLED === 'true'
+  ? createMemoryRedis()
+  : process.env.REDIS_URL
+    ? new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 3, retryStrategy: redisConfig.retryStrategy })
+    : new Redis(redisConfig);
 
 redis.on('connect',   () => logger.debug('Redis: conectando...'));
 redis.on('ready',     () => logger.info('Redis: listo'));

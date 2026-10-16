@@ -11,6 +11,10 @@ const { runBackup } = require('../services/backupService');
 const BACKUP_CRON = process.env.BACKUP_CRON ?? '0 3 * * *';
 
 function iniciarCronJobs() {
+  if (process.env.ENABLE_CRON === 'false') {
+    logger.info('Cron de backup desactivado (ENABLE_CRON=false)');
+    return;
+  }
   cron.schedule(BACKUP_CRON, () => {
     logger.info('Iniciando backup automático de la base de datos...');
     runBackup().catch(() => {}); // el error ya queda registrado dentro de runBackup
