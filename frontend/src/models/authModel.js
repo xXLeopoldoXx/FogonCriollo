@@ -3,7 +3,7 @@
 // Centraliza todas las llamadas al backend de autenticación
 // ============================================================
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 /**
  * Realiza el login contra el backend.
